@@ -15,7 +15,7 @@ import jtimeselector.layers.TimelineManager;
 public class TimeSelectionManager {
 
     public static final Color SELECTION_COLOR = new Color(0xD9760C);
-    private double selectedTime;
+    private long selectedTime;
     private boolean selection = false;
     private final TimelineManager l;
     private final ZoomManager z;
@@ -28,7 +28,7 @@ public class TimeSelectionManager {
     private int stringX1;
     private int stringX2;
 
-    public void selectTime(double time) {
+    public void selectTime(long time) {
         selection = true;
         this.selectedTime = time;
 
@@ -37,7 +37,7 @@ public class TimeSelectionManager {
         return selectedTime;
     }
 
-    public TimeSelectionManager(double selectedTime, TimelineManager l, ZoomManager z) {
+    public TimeSelectionManager(long selectedTime, TimelineManager l, ZoomManager z) {
         this.selectedTime = selectedTime;
         this.l = l;
         this.z = z;
@@ -56,13 +56,13 @@ public class TimeSelectionManager {
         if (!selection) {
             return;
         }
-        if (!z.timeValueInCurrentRange(selectedTime)) {
+        if (!z.timeValueInCurrentRange((long)selectedTime)) {
             return;
         }
         int x = l.getHeaderWidth() + l.getXForTime(selectedTime);
         g.setColor(SELECTION_COLOR);
         FontMetrics fontMetrics = g.getFontMetrics();
-        String timeStr = l.getConverter().timeToString(selectedTime);
+        String timeStr = l.getConverter().timeToString((long)selectedTime);
         int textWidth = fontMetrics.stringWidth(timeStr);
         if (x+textWidth+2*Layer.PADDING>l.getCurrentWidth()) {
             //draw the text on the left from the vertical line
@@ -83,7 +83,7 @@ public class TimeSelectionManager {
      * @param x x-coordinate of whole JTimeSelector component
      */
     public void selectTime(int x) {
-        double time = l.getTimeForX(x);
+        long time = l.getTimeForX(x);
         selectTime(time);
     }
 

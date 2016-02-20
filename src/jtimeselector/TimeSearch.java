@@ -14,12 +14,12 @@ public class TimeSearch {
      * Returns the index of the first element in the array, which is greater
      * than or equal to 'value'
      *
-     * @param array array of doubles sorted in the ascending order
+     * @param array array of long ints sorted in the ascending order
      * @param value
      * @return index of first element that is greater than or equal to the given
      * value or array.length if no such element exists
      */
-    public static int firstGreaterThanOrEqual( double[] array, double value) {
+    public static int firstGreaterThanOrEqual( long[] array, long value) {
         int res = Arrays.binarySearch(array, value);
         if (res >= 0) {  //array contains the given value
             while (res - 1 >= 0) {
@@ -40,12 +40,12 @@ public class TimeSearch {
      * Gets the index of the last element in the array which is less than or
      * equal to the given number.
      *
-     * @param array array of doubles sorted in the ascending order
+     * @param array array of long ints sorted in the ascending order
      * @param value
      * @return index of last element which is less than or equal to value or -1
      * if no such element exist
      */
-    public static int lastLessThanOrEqual( double[] array, double value) {
+    public static int lastLessThanOrEqual( long[] array, long value) {
         int res = Arrays.binarySearch(array, value);
         if (res > 0) {      //array contains the given value
             while (res + 1 < array.length) {
@@ -66,11 +66,11 @@ public class TimeSearch {
      * 'value' from this element is smallest. If the closest value is not
      * determined unambiguously, index of the leftmost of them is returned.
      *
-     * @param array array of doubles sorted in the ascending order
+     * @param array array of longs sorted in the ascending order
      * @param value
      * @return index of the closest element or -1 in the given array was empty
      */
-    public static int indexOfClosest(double[] array, double value) {
+    public static int indexOfClosest(long[] array, long value) {
         if (array.length==0) return -1;
         int res = Arrays.binarySearch(array, value);
         if (res >= 0) { //array contains the given value, find the leftmost ocurrence

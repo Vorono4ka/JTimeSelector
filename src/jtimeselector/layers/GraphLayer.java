@@ -14,9 +14,9 @@ import jtimeselector.ZoomManager;
 
 
 public class GraphLayer extends Layer {
-    private final double[][] valuesTable;
+    private final long[][] valuesTable;
 
-    public GraphLayer(String name, double[][]valuesTable) {
+    public GraphLayer(String name, long[][]valuesTable) {
         super(name);
         this.valuesTable= valuesTable;
     }
@@ -33,29 +33,29 @@ public class GraphLayer extends Layer {
     }
 
     @Override
-    void draw(Graphics2D g, double timeFrom, double timeTo, int headerSize, int graphicsWidth, int y) {
+    void draw(Graphics2D g, long timeFrom, long timeTo, int headerSize, int graphicsWidth, int y) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    double getMaxTimeValue() {
-        double[] timeValues=valuesTable[0];
+    long getMaxTimeValue() {
+        long[] timeValues=valuesTable[0];
         return timeValues[timeValues.length-1] ;
     }
 
     @Override
-    double getMinTimeValue() {
+    long getMinTimeValue() {
         return valuesTable[0][0];
     }
 
 
     @Override
-    void drawTimeSelectionEffect(Graphics2D g, double time, TimelineManager t, ZoomManager z, int y) {
+    void drawTimeSelectionEffect(Graphics2D g, long time, TimelineManager t, ZoomManager z, int y) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    void drawIntervalSelectionEffect(Graphics2D g, double from, double to, TimelineManager t, ZoomManager z, int y) {
+    void drawIntervalSelectionEffect(Graphics2D g, long from, long to, TimelineManager t, ZoomManager z, int y) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

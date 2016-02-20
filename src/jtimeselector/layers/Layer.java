@@ -34,10 +34,10 @@ public abstract class Layer {
      * @param graphicsWidth width of the image on which the graphics is drawn.
      * @param y y coordinate of the location where the layer should be drawn.
      */
-    abstract void draw(Graphics2D g, double timeFrom, double timeTo,int headerSize, int graphicsWidth,int y);
+    abstract void draw(Graphics2D g, long timeFrom, long timeTo,int headerSize, int graphicsWidth,int y);
     
-    abstract double getMaxTimeValue();
-    abstract double getMinTimeValue();
-    abstract void drawTimeSelectionEffect(Graphics2D g, double time, TimelineManager t, ZoomManager z, int y);
-    abstract void drawIntervalSelectionEffect(Graphics2D g, double from, double to, TimelineManager t, ZoomManager  z,int y);
+    abstract long getMaxTimeValue();
+    abstract long getMinTimeValue();
+    abstract void drawTimeSelectionEffect(Graphics2D g, long time, TimelineManager t, ZoomManager z, int y);
+    abstract void drawIntervalSelectionEffect(Graphics2D g, long from, long to, TimelineManager t, ZoomManager  z,int y);
 }

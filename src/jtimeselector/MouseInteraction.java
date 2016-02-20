@@ -72,7 +72,7 @@ public class MouseInteraction extends MouseAdapter {
         if (abs < 10) {
             return;
         }
-        double time = layerManager.getTimeDistance(abs);
+        long time = layerManager.getTimeDistance(abs);
         zoomManager.moveVisibleArea(-time * sgn);
         startX = e.getX();
         component.requireRepaint();
@@ -117,13 +117,13 @@ public class MouseInteraction extends MouseAdapter {
                 a = x;
                 b = startX;
             }
-            double t1 = layerManager.getTimeForX(a);
-            double t2 = layerManager.getTimeForX(b);
-            final double minTime = zoomManager.getCurrentMinTime();
+            long t1 = (long)layerManager.getTimeForX(a);
+            long t2 = (long)layerManager.getTimeForX(b);
+            final long minTime = zoomManager.getCurrentMinTime();
             if (t1 < minTime) {
                 t1 = minTime;
             }
-            final double maxTime = zoomManager.getCurrentMaxTime();
+            final long maxTime = zoomManager.getCurrentMaxTime();
             if (t2 > maxTime) {
                 t2 = maxTime;
             }

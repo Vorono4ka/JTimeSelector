@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
+import java.util.OptionalLong;
 import jtimeselector.IntervalSelectionManager;
 import jtimeselector.TimeSelectionManager;
 import jtimeselector.TimeToStringConverter;
@@ -93,12 +94,12 @@ public class TimelineManager {
      *
      * @return Time value represented as a double.
      */
-    public double getMinTime() {
-        OptionalDouble min = layers.stream().mapToDouble(l -> l.getMinTimeValue()).min();
+    public long getMinTime() {
+        OptionalLong min = layers.stream().mapToLong(l -> l.getMinTimeValue()).min();
         if (!min.isPresent()) {
             throw new IllegalStateException("Layers list is empty.");
         }
-        return min.getAsDouble();
+        return min.getAsLong();
     }
 
     /**
@@ -106,12 +107,12 @@ public class TimelineManager {
      *
      * @return Time value represented as a double.
      */
-    public double getMaxTime() {
-        OptionalDouble max = layers.stream().mapToDouble(l -> l.getMaxTimeValue()).max();
+    public long getMaxTime() {
+        OptionalLong max = layers.stream().mapToLong(l -> l.getMaxTimeValue()).max();
         if (!max.isPresent()) {
             throw new IllegalStateException("Layers list is empty.");
         }
-        return max.getAsDouble();
+        return max.getAsLong();
     }
 
     /**
@@ -141,8 +142,8 @@ public class TimelineManager {
     public void drawLayers(Graphics2D g, int y, int imageWidth, int imageHeight) {
         currentWidth = imageWidth;
         currentHeight = imageHeight;
-        double timeFrom = zoomManager.getCurrentMinTime();
-        double timeTo = zoomManager.getCurrentMaxTime();
+        long timeFrom = zoomManager.getCurrentMinTime();
+        long timeTo = zoomManager.getCurrentMaxTime();
         int x = getRequiredHeaderWidth(g);
         currentHeaderWidth = x + 2 * Layer.PADDING + Layer.POINT_RADIUS;
         timelineWidth = currentWidth - currentHeaderWidth - Layer.PADDING - Layer.POINT_RADIUS;
@@ -161,7 +162,7 @@ public class TimelineManager {
     public int getTimeLabelsBaselineY() {
         return layersBottomY+fontHeight;
     }
-    public void drawTimeLabels(Graphics2D g, int y, double timeFrom, double timeTo, TimeSelectionManager s, IntervalSelectionManager is) {
+    public void drawTimeLabels(Graphics2D g, int y, long timeFrom, long timeTo, TimeSelectionManager s, IntervalSelectionManager is) {
        int xMin,xMax;
         final FontMetrics fontMetrics = g.getFontMetrics();
         int baseline = getTimeLabelsBaselineY();
@@ -187,7 +188,7 @@ public class TimelineManager {
  * @param y
  * @param time 
  */
-    public void drawTimeSelectionEffects(Graphics2D g, int y, double time) {
+    public void drawTimeSelectionEffects(Graphics2D g, int y, long time) {
         for (Layer layer : layers) {
             layer.drawTimeSelectionEffect(g, time, this, zoomManager, y);
             y = y + layer.getHeight();
@@ -201,7 +202,7 @@ public class TimelineManager {
      * @param from
      * @param to 
      */
-    public void drawIntervalSelectionEffects(Graphics2D g, int y, double from, double to) {
+    public void drawIntervalSelectionEffects(Graphics2D g, int y, long from, long to) {
         for (Layer layer : layers) {
             layer.drawIntervalSelectionEffect(g, from,to, this, zoomManager, y);
             y = y + layer.getHeight();
@@ -216,27 +217,27 @@ public class TimelineManager {
         return layers.isEmpty();
     }
 
-    public double getTimeForX(int x) {
-        double timeFrom = zoomManager.getCurrentMinTime();
-        double timeTo = zoomManager.getCurrentMaxTime();
-        double timeInterval = timeTo - timeFrom;
+    public long getTimeForX(int x) {
+        long timeFrom = zoomManager.getCurrentMinTime();
+        long timeTo = zoomManager.getCurrentMaxTime();
+        long timeInterval = timeTo - timeFrom;
         x = x - currentHeaderWidth;
-        return timeFrom + timeInterval * x / timelineWidth;
+        return Math.round(timeFrom + timeInterval * x / (double)timelineWidth);
     }
 
-    public double getTimeDistance(int interval) {
-        double timeFrom = zoomManager.getCurrentMinTime();
-        double timeTo = zoomManager.getCurrentMaxTime();
+    public long getTimeDistance(int interval) {
+        long timeFrom = zoomManager.getCurrentMinTime();
+        long timeTo = zoomManager.getCurrentMaxTime();
 
-        double timeInterval = timeTo - timeFrom;
-        return timeInterval * interval / timelineWidth;
+        long timeInterval = timeTo - timeFrom;
+        return (timeInterval * interval) / timelineWidth;
 
     }
 
-    public int getXForTime(double time) {
-        double timeFrom = zoomManager.getCurrentMinTime();
-        double timeTo = zoomManager.getCurrentMaxTime();
-        double timelinePercent = (time - timeFrom) / (timeTo - timeFrom);
+    public int getXForTime(long time) {
+        long timeFrom = zoomManager.getCurrentMinTime();
+        long timeTo = zoomManager.getCurrentMaxTime();
+        double timelinePercent = ((double)(time - timeFrom)) / (timeTo - timeFrom);
         return (int) Math.round(timelinePercent * timelineWidth);
     }
 

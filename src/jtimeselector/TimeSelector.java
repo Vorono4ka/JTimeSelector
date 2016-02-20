@@ -9,13 +9,13 @@ package jtimeselector;
  * 5.12.2015
  */
 public interface TimeSelector {
-    void addTimeValuesLayer(String name, double[] timeValues);
+    void addTimeValuesLayer(String name, long[] timeValues);
     /**
      * 
      * @param name name of the layer
      * @param values values[0]: times, values[1]: function values
      */
-    void addGraphLayer(String name, double[][] values);
+    void addGraphLayer(String name, long[][] values);
     
     /**
      * Removes the layer with the given name from the list of displayed layers.
@@ -38,23 +38,23 @@ public interface TimeSelector {
      * Gets currently selected time.
      * @return Null if no time is selected.
      */
-    Double getSelectedTime();
+    Long getSelectedTime();
     /**
      * Using this method the selected time can be set from outside.
      * @param d 
      */
-    void selectTime(double d);
+    void selectTime(long d);
     /**
      * Using this method the selected time interval can be set from outside. 
      * @param from
      * @param to 
      */
-    void selectTimeInterval(double from, double to);
+    void selectTimeInterval(long from, long to);
     /**
      * Gets currently selected time interval.
      * @return Null if no time interval is selected (e.g. TimeSelectionType.SingleValue is selected)
      */
-    DoubleRange getSelectedTimeInterval();
+    LongRange getSelectedTimeInterval();
     /**
      * Sets the function which is used to convert double time values
      * to strings that are displayed on the panel.

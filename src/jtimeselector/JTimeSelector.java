@@ -54,14 +54,14 @@ public class JTimeSelector extends JPanel implements TimeSelector {
         JFrame f = new JFrame("Time Selector Test");
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         f.setLayout(new BorderLayout());
-        final JTimeSelector jTimeSelector = new JTimeSelector();
+        final JTimeSelector jTimeSelector = new JTimeSelector((x)->{return Long.toString(x/1000);});
         f.add(jTimeSelector);
-        jTimeSelector.addTimeValuesLayer("TestLayer", new double[]{1.2, 2, 3, 4, 5, 6});
-        jTimeSelector.addTimeValuesLayer("TestLayer 2", new double[]{2, 3, 4, 5, 6, 8, 10, 15, 16});
-        jTimeSelector.addTimeValuesLayer("Another multi-information layer", new double[]{1, 1.2, 1.5, 1.7, 2, 2.5, 4, 4.5, 6, 7});
-        jTimeSelector.addTimeValuesLayer("Empty layer", new double[]{});
-        jTimeSelector.addTimeValuesLayer("Empty layer 2", new double[]{});
-        jTimeSelector.addTimeValuesLayer("Empty layer 3", new double[]{});
+        jTimeSelector.addTimeValuesLayer("TestLayer", new long[]{1000, 2000, 3000, 4000, 5000, 6000});
+        jTimeSelector.addTimeValuesLayer("TestLayer 2", new long[]{2_000, 3_000, 4_000, 5_000, 6_000, 8_000, 10_000, 15_000, 16_000});
+        jTimeSelector.addTimeValuesLayer("Another multi-information layer", new long[]{-6_000, -1_000, 0_000, 1_000, 2_000, 3_000, 4_000, 5_000, 6_000, 7_000});
+        jTimeSelector.addTimeValuesLayer("Empty layer", new long[]{});
+        jTimeSelector.addTimeValuesLayer("Empty layer 2", new long[]{});
+        jTimeSelector.addTimeValuesLayer("Empty layer 3", new long[]{});
         f.setSize(800, 400);
         f.setVisible(true);
 //        new Thread(() -> {
@@ -77,14 +77,14 @@ public class JTimeSelector extends JPanel implements TimeSelector {
 //            } catch (InterruptedException ex) {
 //                Logger.getLogger(JTimeSelector.class.getName()).log(Level.SEVERE, null, ex);
 //            }
-//            jTimeSelector.addTimeValuesLayer("TestLayer 2nd phase", new double[]{2, 3, 4, 5, 6, 8, 10, 15, 16});
+//            jTimeSelector.addTimeValuesLayer("TestLayer 2nd phase", new long[]{2, 3, 4, 5, 6, 8, 10, 15, 16});
 //            jTimeSelector.requireRepaint();
 //            try {
 //                Thread.sleep(2000);
 //            } catch (InterruptedException ex) {
 //                Logger.getLogger(JTimeSelector.class.getName()).log(Level.SEVERE, null, ex);
 //            }
-//            jTimeSelector.addTimeValuesLayer("NewLayer", new double[]{1.2, 2, 3, 4, 5, 6});
+//            jTimeSelector.addTimeValuesLayer("NewLayer", new long[]{1.2, 2, 3, 4, 5, 6});
 //
 //        }).start();
         jTimeSelector.addTimeSelectionChangedListener((x)-> {
@@ -106,22 +106,22 @@ public class JTimeSelector extends JPanel implements TimeSelector {
     private final IntervalSelectionManager intervalSelection;
 
     /**
-     * Creates a new component that displays a list of values in time. Double
-     * time values will be converted to string using the function {@link Double#toString()
+     * Creates a new component that displays a list of values in time. Long
+     * time values will be converted to string using the function {@link Long#toString()
      * }.
      */
     public JTimeSelector() {
-        this(Double::toString);
+        this(Long::toString);
     }
 
     /**
      * Creates a new component that displays a lists of values in time. The time
-     * values are represented as doubles. By providing a converter
-     * {@code converter} you can affect how the double values will be drawn on
-     * the component. If no converter is specified, the function {@link Double#toString()
+     * values are represented as longs. By providing a converter
+     * {@code converter} you can affect how the long values will be drawn on
+     * the component. If no converter is specified, the function {@link Long#toString()
      * } is used.
      *
-     * @param converter a function converting double time values to string
+     * @param converter a function converting long time values to string
      */
     public JTimeSelector(TimeToStringConverter converter) {
         layerManager = new TimelineManager(zoomManager, converter);
@@ -139,9 +139,9 @@ public class JTimeSelector extends JPanel implements TimeSelector {
             if (rotation > 3) {
                 rotation = 3;
             }
-            double time = layerManager.getTimeForX(e.getX());
-            final double currentMinTime = zoomManager.getCurrentMinTime();
-            final double currentMaxTime = zoomManager.getCurrentMaxTime();
+            long time = (long)layerManager.getTimeForX(e.getX());
+            final long currentMinTime = zoomManager.getCurrentMinTime();
+            final long currentMaxTime = zoomManager.getCurrentMaxTime();
             if (time < currentMinTime || time > currentMaxTime) {
                 return;
             }
@@ -181,11 +181,11 @@ public class JTimeSelector extends JPanel implements TimeSelector {
         } else {
             timeSelection.drawSelectedTime(gr);
             if (timeSelection.isSelection()) {
-                layerManager.drawTimeSelectionEffects(gr, TOP_PADDING, timeSelection.getSelectedTime());
+                layerManager.drawTimeSelectionEffects(gr, TOP_PADDING, (long)timeSelection.getSelectedTime());
             }
             if (intervalSelection.isSelection()) {
                 intervalSelection.drawIntervalSelection(gr);
-                layerManager.drawIntervalSelectionEffects(gr,TOP_PADDING, intervalSelection.getT1(), intervalSelection.getT2());
+                layerManager.drawIntervalSelectionEffects(gr,TOP_PADDING, (long)intervalSelection.getT1(), (long)intervalSelection.getT2());
             }
         }
         if (!layerManager.isEmpty()) {
@@ -224,13 +224,13 @@ public class JTimeSelector extends JPanel implements TimeSelector {
     }
 
     @Override
-    public void addTimeValuesLayer(String name, double[] timeValues) {
+    public void addTimeValuesLayer(String name, long[] timeValues) {
         layerManager.addLayer(new TimeEntryLayer(name, timeValues));
         zoomManager.updateMinAndMaxTime(layerManager);
     }
 
     @Override
-    public void addGraphLayer(String name, double[][] values) {
+    public void addGraphLayer(String name, long[][] values) {
         layerManager.addLayer(new GraphLayer(name, values));
         zoomManager.updateMinAndMaxTime(layerManager);
     }
@@ -254,15 +254,15 @@ public class JTimeSelector extends JPanel implements TimeSelector {
     }
 
     @Override
-    public Double getSelectedTime() {
+    public Long getSelectedTime() {
         if (timeSelection.isSelection() == false) {
             return null;
         }
-        return timeSelection.getSelectedTime();
+        return (long)timeSelection.getSelectedTime();
     }
 
     @Override
-    public void selectTime(double d) {
+    public void selectTime(long d) {
         timeSelection.selectTime(d);
         intervalSelection.clearSelection();
         repaint();
@@ -270,7 +270,7 @@ public class JTimeSelector extends JPanel implements TimeSelector {
     }
 
     @Override
-    public void selectTimeInterval(double from, double to) {
+    public void selectTimeInterval(long from, long to) {
         intervalSelection.setSelection(from, to);
         timeSelection.clearSelection();
         timeSelectionChanged();
@@ -278,9 +278,9 @@ public class JTimeSelector extends JPanel implements TimeSelector {
     }
 
     @Override
-    public DoubleRange getSelectedTimeInterval() {
+    public LongRange getSelectedTimeInterval() {
         if (intervalSelection.isSelection()) {
-            return new DoubleRange(intervalSelection.getT1(), intervalSelection.getT2());
+            return new LongRange((long)intervalSelection.getT1(), (long)intervalSelection.getT2());
         } else {
             return null;
         }

@@ -13,8 +13,8 @@ import jtimeselector.layers.TimelineManager;
  */
 public class IntervalSelectionManager {
 
-    private double t1;
-    private double t2;
+    private long t1;
+    private long t2;
     private boolean selection = false;
     private final TimelineManager tm;
     private final ZoomManager z;
@@ -38,17 +38,17 @@ public class IntervalSelectionManager {
         setSelection(tm.getTimeForX(x1), tm.getTimeForX(x2));
     }
 
-    public void setSelection(double t1, double t2) {
+    public void setSelection(long t1, long t2) {
         selection = true;
         this.t1 = t1;
         this.t2 = t2;
     }
 
-    public double getT1() {
+    public long getT1() {
         return t1;
     }
 
-    public double getT2() {
+    public long getT2() {
         return t2;
     }
 
@@ -60,8 +60,8 @@ public class IntervalSelectionManager {
         if (!selection) {
             return;
         }
-        drawLeft = z.timeValueInCurrentRange(t1);
-        drawRight = z.timeValueInCurrentRange(t2);
+        drawLeft = z.timeValueInCurrentRange((long)t1);
+        drawRight = z.timeValueInCurrentRange((long)t2);
         if (!drawLeft && !drawRight) {
             return;
         }
@@ -84,7 +84,7 @@ public class IntervalSelectionManager {
 
     private void drawLeftLabel(Graphics2D g, int textY, int x1, int x2, boolean rightDrawn) {
         FontMetrics fm = g.getFontMetrics();
-        String s = tm.getConverter().timeToString(t1);
+        String s = tm.getConverter().timeToString((long)t1);
         int width = fm.stringWidth(s);
         str1x1 = x1 + Layer.PADDING; // |Label  | Label
         str1x2 = str1x1 + width;
@@ -107,7 +107,7 @@ public class IntervalSelectionManager {
      */
     private void drawRightLabel(Graphics2D g, int textY, int x1, int x2, boolean leftDrawn) {
         FontMetrics fm = g.getFontMetrics();
-        String s = tm.getConverter().timeToString(t2);
+        String s = tm.getConverter().timeToString((long)t2);
         int width = fm.stringWidth(s);
         str2x1 = x2 + Layer.PADDING;
         str2x2 = str2x1 + width;
@@ -143,8 +143,8 @@ public class IntervalSelectionManager {
             clearSelection();
             return false;
         }
-        final double minTime = tm.getMinTime();
-        final double maxTime = tm.getMaxTime();
+        final long minTime = tm.getMinTime();
+        final long maxTime = tm.getMaxTime();
         boolean change= false;
         if (t1 < minTime) {
             t1 = minTime;

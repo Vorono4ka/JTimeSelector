@@ -9,5 +9,5 @@ package jtimeselector;
  * 8.1.2016
  */
 public interface TimeToStringConverter {
-    String timeToString(double d);
+    String timeToString(long l);
 }

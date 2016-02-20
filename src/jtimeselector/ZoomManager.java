@@ -10,15 +10,15 @@ import jtimeselector.layers.TimelineManager;
  */
 public class ZoomManager {
 
-    double minTime;
-    double maxTime;
-    double currentMin;
-    double currentMax;
+    long minTime;
+    long maxTime;
+    long currentMin;
+    long currentMax;
     boolean noZoom = true;
     private static final double COEF = .8;
     private static final double COEF_INV = 1.25;
 
-    public ZoomManager(double minTime, double maxTime) {
+    public ZoomManager(long minTime, long maxTime) {
         updateMinAndMaxTime(minTime, maxTime);
         setDefaultZoom();
     }
@@ -27,7 +27,7 @@ public class ZoomManager {
 
     }
 
-    public final void updateMinAndMaxTime(double minTime1, double maxTime1) {
+    public final void updateMinAndMaxTime(long minTime1, long maxTime1) {
         this.minTime = minTime1;
         this.maxTime = maxTime1;
     }
@@ -48,22 +48,22 @@ public class ZoomManager {
         currentMax = maxTime;
     }
 
-    public double getCurrentMinTime() {
+    public long getCurrentMinTime() {
         return currentMin;
     }
 
-    public double getCurrentMaxTime() {
+    public long getCurrentMaxTime() {
         return currentMax;
     }
 
-    public void zoomIn(int times, double center) {
+    public void zoomIn(int times, long center) {
         noZoom=false;
         for (int i = 0; i < times; i++) {
             zoomIn(center);
         }
     }
 
-    public void zoomOut(int times, double center) {
+    public void zoomOut(int times, long center) {
         for (int i = 0; i < times; i++) {
             zoomOut(center);
         }
@@ -74,27 +74,27 @@ public class ZoomManager {
         }
     }
 
-    private void zoomIn(double center) {
-        currentMin = center - (center - currentMin) * COEF;
-        currentMax = center + (currentMax - center) * COEF;
+    private void zoomIn(long center) {
+        currentMin = (long)(center - (center - currentMin) * COEF);
+        currentMax = (long)(center + (currentMax - center) * COEF);
         
     }
 
-    private void zoomOut(double center) {
-        currentMin = center - (center - currentMin) * COEF_INV;
-        currentMax = center + (currentMax - center) * COEF_INV;
+    private void zoomOut(long center) {
+        currentMin = (long)(center - (center - currentMin) * COEF_INV);
+        currentMax = (long)(center + (currentMax - center) * COEF_INV);
     }
     /**
      * p
      * @param timeOffset positive or negative value that will be added to the current interval
      */
-    public void moveVisibleArea(double timeOffset) {
+    public void moveVisibleArea(long timeOffset) {
         if (currentMin+timeOffset<minTime) timeOffset=minTime-currentMin;
         if (currentMax+timeOffset>maxTime) timeOffset=maxTime-currentMax;
         currentMin+=timeOffset;
         currentMax+=timeOffset;
     }
-    public boolean timeValueInCurrentRange(double time) {
+    public boolean timeValueInCurrentRange(long time) {
         return time>=currentMin&&time<=currentMax;
     }
 
