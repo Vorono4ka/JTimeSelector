@@ -117,8 +117,8 @@ public class MouseInteraction extends MouseAdapter {
                 a = x;
                 b = startX;
             }
-            long t1 = (long)layerManager.getTimeForX(a);
-            long t2 = (long)layerManager.getTimeForX(b);
+            long t1 = (long) layerManager.getTimeForX(a);
+            long t2 = (long) layerManager.getTimeForX(b);
             final long minTime = zoomManager.getCurrentMinTime();
             if (t1 < minTime) {
                 t1 = minTime;
@@ -129,10 +129,10 @@ public class MouseInteraction extends MouseAdapter {
             }
             intervalSelection.setSelection(t1, t2);
             selectionManager.clearSelection();
+            component.timeSelectionChanged();
         }
         rectangleGuides.setVisible(false);
         rectSelStarted = false;
-        component.timeSelectionChanged();
         component.repaint();
 
     }

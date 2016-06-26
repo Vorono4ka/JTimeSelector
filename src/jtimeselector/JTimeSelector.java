@@ -26,6 +26,8 @@ import jtimeselector.layers.TimeEntryLayer;
  */
 public class JTimeSelector extends JPanel implements TimeSelector {
 
+    private static final long serialVersionUID = 1L;
+
     private BufferedImage image;
     private int oldWidth = 0;
     private int oldHeight = 0;
@@ -56,12 +58,12 @@ public class JTimeSelector extends JPanel implements TimeSelector {
         f.setLayout(new BorderLayout());
         final JTimeSelector jTimeSelector = new JTimeSelector((x)->{return Long.toString(x/1000);});
         f.add(jTimeSelector);
-        jTimeSelector.addTimeValuesLayer("TestLayer", new long[]{1000, 2000, 3000, 4000, 5000, 6000});
-        jTimeSelector.addTimeValuesLayer("TestLayer 2", new long[]{2_000, 3_000, 4_000, 5_000, 6_000, 8_000, 10_000, 15_000, 16_000});
-        jTimeSelector.addTimeValuesLayer("Another multi-information layer", new long[]{-6_000, -1_000, 0_000, 1_000, 2_000, 3_000, 4_000, 5_000, 6_000, 7_000});
+        jTimeSelector.addTimeValuesLayer("Test Layer", new long[]{1000, 2000, 3000, 4000, 5000, 6000});
+        jTimeSelector.addTimeValuesLayer("Test Layer 2", new long[]{2_000, 3_000, 4_000, 5_000, 6_000, 8_000, 10_000, 15_000, 16_000});
+        jTimeSelector.addTimeValuesLayer("Third Test Layer", new long[]{-6_000, -1_000, 0_000, 1_000, 2_000, 3_000, 4_000, 5_000, 6_000, 7_000});
         jTimeSelector.addTimeValuesLayer("Empty layer", new long[]{});
-        jTimeSelector.addTimeValuesLayer("Empty layer 2", new long[]{});
-        jTimeSelector.addTimeValuesLayer("Empty layer 3", new long[]{});
+        //jTimeSelector.addTimeValuesLayer("Empty layer 2", new long[]{});
+        //jTimeSelector.addTimeValuesLayer("Empty layer 3", new long[]{});
         f.setSize(800, 400);
         f.setVisible(true);
 //        new Thread(() -> {
@@ -139,7 +141,7 @@ public class JTimeSelector extends JPanel implements TimeSelector {
             if (rotation > 3) {
                 rotation = 3;
             }
-            long time = (long)layerManager.getTimeForX(e.getX());
+            long time = layerManager.getTimeForX(e.getX());
             final long currentMinTime = zoomManager.getCurrentMinTime();
             final long currentMaxTime = zoomManager.getCurrentMaxTime();
             if (time < currentMinTime || time > currentMaxTime) {
