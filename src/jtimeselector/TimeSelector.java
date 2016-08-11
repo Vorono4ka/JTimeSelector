@@ -9,14 +9,12 @@ package jtimeselector;
  * 5.12.2015
  */
 public interface TimeSelector {
-    void addTimeValuesLayer(String name, long[] timeValues);
     /**
-     * 
+     * Adds a layer with a small circle for each time value in the list.
      * @param name name of the layer
-     * @param values values[0]: times, values[1]: function values
+     * @param timeValues time instants for which a small circle will be drawn on the timeline
      */
-    void addGraphLayer(String name, long[][] values);
-    
+    void addTimeValuesLayer(String name, long[] timeValues);
     /**
      * Removes the layer with the given name from the list of displayed layers.
      * Does not automatically refresh/redraw the panel!

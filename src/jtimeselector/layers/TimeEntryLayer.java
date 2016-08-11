@@ -9,7 +9,10 @@ import jtimeselector.TimeSearch;
 import jtimeselector.ZoomManager;
 
 /**
- *
+ * Responsible for drawing a single timeline layer.
+ * Generates a series of small circles, a single circle 
+ * for each time value.
+ * 
  * @author Tomas Prochazka 6.12.2015
  */
 public class TimeEntryLayer extends Layer {
@@ -22,10 +25,7 @@ public class TimeEntryLayer extends Layer {
         this.timeValues = timeValues;
     }
 
-    @Override
-    LayerType getLayerType() {
-        return LayerType.TimeEntries;
-    }
+
 
     @Override
     int getHeight() {

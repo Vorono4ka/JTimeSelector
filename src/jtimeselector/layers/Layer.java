@@ -19,7 +19,6 @@ public abstract class Layer {
         this.name = name;
     }
     
-    abstract LayerType getLayerType();
     abstract int getHeight();
 
     public String getName() {

@@ -8,7 +8,8 @@ import static jtimeselector.JTimeSelector.TOP_PADDING;
 import jtimeselector.layers.Layer;
 
 /**
- *
+ * A class responsible for drawing the two straight lines that mark
+ * the selected interval.
  * @author Tomas Prochazka 9.1.2016
  */
 public class RectangleSelectionGuides {

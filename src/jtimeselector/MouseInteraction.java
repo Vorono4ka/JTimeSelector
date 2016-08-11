@@ -8,7 +8,10 @@ import jtimeselector.layers.Layer;
 import jtimeselector.layers.TimelineManager;
 
 /**
- *
+ * Reacts on the user interaction.
+ * Notifies  {@link TimelineManager}, {@link ZoomManager}, {@link RectangleSelectionGuides}
+ * and {@link IntervalSelectionManager} about the changes that were caused
+ * by the user clicking / dragging / scrolling with the mouse.
  * @author Tomas Prochazka 8.1.2016
  */
 public class MouseInteraction extends MouseAdapter {

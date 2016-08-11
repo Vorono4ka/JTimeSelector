@@ -15,12 +15,28 @@ import java.util.List;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
-import jtimeselector.layers.GraphLayer;
 import jtimeselector.layers.Layer;
 import jtimeselector.layers.TimelineManager;
 import jtimeselector.layers.TimeEntryLayer;
 
 /**
+ * A swing component that displays a timeline with possibility of user
+ * interaction: selection of a time / interval, zoom in / zoom out.
+ * <p>
+ * Layers with values can be added using the method {@link #addTimeValuesLayer(java.lang.String, long[])
+ * }.
+ * <p>
+ * It is possible to attach listeners that will be notified of changes in
+ * selection (method {@link #addTimeSelectionChangedListener(jtimeselector.TimeSelectionListener)
+ * }).
+ * <p>
+ * A time or a time interval can also be set from outside using {@link #selectTime(long)
+ * } or {@link #selectTimeInterval(long, long) }.
+ * <p>
+ * It is possible to set how the time should be displayed to the user, an
+ * instance of {@link TimeToStringConverter} can be set either by constructor or
+ * explicitly by the setter method {@link #setTimeToStringConverter(jtimeselector.TimeToStringConverter)
+ * }
  *
  * @author Tomas Prochazka 5.12.2015
  */
@@ -52,11 +68,16 @@ public class JTimeSelector extends JPanel implements TimeSelector {
         });
     }
 
+    /**
+     * test method only
+     */
     public static void createGUI() {
         JFrame f = new JFrame("Time Selector Test");
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         f.setLayout(new BorderLayout());
-        final JTimeSelector jTimeSelector = new JTimeSelector((x)->{return Long.toString(x/1000);});
+        final JTimeSelector jTimeSelector = new JTimeSelector((x) -> {
+            return Long.toString(x / 1000);
+        });
         f.add(jTimeSelector);
         jTimeSelector.addTimeValuesLayer("Test Layer", new long[]{1000, 2000, 3000, 4000, 5000, 6000});
         jTimeSelector.addTimeValuesLayer("Test Layer 2", new long[]{2_000, 3_000, 4_000, 5_000, 6_000, 8_000, 10_000, 15_000, 16_000});
@@ -66,6 +87,7 @@ public class JTimeSelector extends JPanel implements TimeSelector {
         //jTimeSelector.addTimeValuesLayer("Empty layer 3", new long[]{});
         f.setSize(800, 400);
         f.setVisible(true);
+        // test of the correct behaviour if layers are added/removed:
 //        new Thread(() -> {
 //            try {
 //                Thread.sleep(4000);
@@ -89,17 +111,17 @@ public class JTimeSelector extends JPanel implements TimeSelector {
 //            jTimeSelector.addTimeValuesLayer("NewLayer", new long[]{1.2, 2, 3, 4, 5, 6});
 //
 //        }).start();
-        jTimeSelector.addTimeSelectionChangedListener((x)-> {
-            String type=""; 
-            switch(x.getTimeSelectionType()){
+        jTimeSelector.addTimeSelectionChangedListener((x) -> {
+            String type = "";
+            switch (x.getTimeSelectionType()) {
                 case SingleValue:
-                    type="single value";
+                    type = "single value";
                     break;
                 case Interval:
-                    type="interval";
+                    type = "interval";
                     break;
                 case None:
-                    type="none";
+                    type = "none";
                     break;
             }
             System.out.println("Time selection chaned to " + type);
@@ -108,8 +130,8 @@ public class JTimeSelector extends JPanel implements TimeSelector {
     private final IntervalSelectionManager intervalSelection;
 
     /**
-     * Creates a new component that displays a list of values in time. Long
-     * time values will be converted to string using the function {@link Long#toString()
+     * Creates a new component that displays a list of values in time. Long time
+     * values will be converted to string using the function {@link Long#toString()
      * }.
      */
     public JTimeSelector() {
@@ -119,8 +141,8 @@ public class JTimeSelector extends JPanel implements TimeSelector {
     /**
      * Creates a new component that displays a lists of values in time. The time
      * values are represented as longs. By providing a converter
-     * {@code converter} you can affect how the long values will be drawn on
-     * the component. If no converter is specified, the function {@link Long#toString()
+     * {@code converter} you can affect how the long values will be drawn on the
+     * component. If no converter is specified, the function {@link Long#toString()
      * } is used.
      *
      * @param converter a function converting long time values to string
@@ -183,15 +205,15 @@ public class JTimeSelector extends JPanel implements TimeSelector {
         } else {
             timeSelection.drawSelectedTime(gr);
             if (timeSelection.isSelection()) {
-                layerManager.drawTimeSelectionEffects(gr, TOP_PADDING, (long)timeSelection.getSelectedTime());
+                layerManager.drawTimeSelectionEffects(gr, TOP_PADDING, (long) timeSelection.getSelectedTime());
             }
             if (intervalSelection.isSelection()) {
                 intervalSelection.drawIntervalSelection(gr);
-                layerManager.drawIntervalSelectionEffects(gr,TOP_PADDING, (long)intervalSelection.getT1(), (long)intervalSelection.getT2());
+                layerManager.drawIntervalSelectionEffects(gr, TOP_PADDING, (long) intervalSelection.getT1(), (long) intervalSelection.getT2());
             }
         }
         if (!layerManager.isEmpty()) {
-            layerManager.drawTimeLabels(gr, layerManager.getLayersBottomY(), 
+            layerManager.drawTimeLabels(gr, layerManager.getLayersBottomY(),
                     zoomManager.getCurrentMinTime(), zoomManager.getCurrentMaxTime(),
                     timeSelection, intervalSelection);
         }
@@ -225,18 +247,18 @@ public class JTimeSelector extends JPanel implements TimeSelector {
         repaint();
     }
 
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public void addTimeValuesLayer(String name, long[] timeValues) {
         layerManager.addLayer(new TimeEntryLayer(name, timeValues));
         zoomManager.updateMinAndMaxTime(layerManager);
     }
 
-    @Override
-    public void addGraphLayer(String name, long[][] values) {
-        layerManager.addLayer(new GraphLayer(name, values));
-        zoomManager.updateMinAndMaxTime(layerManager);
-    }
-
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public void removeGraphLayer(String name) {
         layerManager.removeLayer(name);
@@ -246,6 +268,9 @@ public class JTimeSelector extends JPanel implements TimeSelector {
         }
     }
 
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public void removeAllGraphLayers() {
         layerManager.removeAllLayers();
@@ -255,14 +280,20 @@ public class JTimeSelector extends JPanel implements TimeSelector {
         }
     }
 
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public Long getSelectedTime() {
         if (timeSelection.isSelection() == false) {
             return null;
         }
-        return (long)timeSelection.getSelectedTime();
+        return (long) timeSelection.getSelectedTime();
     }
 
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public void selectTime(long d) {
         timeSelection.selectTime(d);
@@ -271,6 +302,9 @@ public class JTimeSelector extends JPanel implements TimeSelector {
         timeSelectionChanged();
     }
 
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public void selectTimeInterval(long from, long to) {
         intervalSelection.setSelection(from, to);
@@ -279,15 +313,20 @@ public class JTimeSelector extends JPanel implements TimeSelector {
         repaint();
     }
 
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public LongRange getSelectedTimeInterval() {
         if (intervalSelection.isSelection()) {
-            return new LongRange((long)intervalSelection.getT1(), (long)intervalSelection.getT2());
+            return new LongRange((long) intervalSelection.getT1(), (long) intervalSelection.getT2());
         } else {
             return null;
         }
     }
-
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public TimeSelectionType getTimeSelectionType() {
         if (timeSelection.isSelection()) {
