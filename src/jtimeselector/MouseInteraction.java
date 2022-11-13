@@ -2,10 +2,11 @@
  */
 package jtimeselector;
 
+import jtimeselector.layers.TimeEntryLayer;
+import jtimeselector.layers.TimelineManager;
+
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import jtimeselector.layers.Layer;
-import jtimeselector.layers.TimelineManager;
 
 /**
  * Reacts on the user interaction.
@@ -15,21 +16,20 @@ import jtimeselector.layers.TimelineManager;
  * @author Tomas Prochazka 8.1.2016
  */
 public class MouseInteraction extends MouseAdapter {
-
     private int startX;
     private boolean rectSelStarted = false;
-    TimelineManager layerManager;
+    TimelineManager timelineManager;
     ZoomManager zoomManager;
     JTimeSelector component;
     TimeSelectionManager selectionManager;
     RectangleSelectionGuides rectangleGuides;
     private final IntervalSelectionManager intervalSelection;
 
-    public MouseInteraction(TimelineManager layerManager, ZoomManager zoomManager,
-            JTimeSelector component, TimeSelectionManager selectionManager,
-            RectangleSelectionGuides rectangleGuides,
-            IntervalSelectionManager intervalSelection) {
-        this.layerManager = layerManager;
+    public MouseInteraction(TimelineManager timelineManager, ZoomManager zoomManager,
+                            JTimeSelector component, TimeSelectionManager selectionManager,
+                            RectangleSelectionGuides rectangleGuides,
+                            IntervalSelectionManager intervalSelection) {
+        this.timelineManager = timelineManager;
         this.zoomManager = zoomManager;
         this.component = component;
         this.selectionManager = selectionManager;
@@ -39,7 +39,7 @@ public class MouseInteraction extends MouseAdapter {
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (layerManager.isEmpty()) {
+        if (timelineManager.isEmpty()) {
             return;
         }
         startX = e.getX();
@@ -50,7 +50,7 @@ public class MouseInteraction extends MouseAdapter {
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        if (layerManager.isEmpty()) {
+        if (timelineManager.isEmpty()) {
             rectSelStarted = false;
             rectangleGuides.setVisible(false);
             return;
@@ -75,7 +75,7 @@ public class MouseInteraction extends MouseAdapter {
         if (abs < 10) {
             return;
         }
-        long time = layerManager.getTimeDistance(abs);
+        long time = timelineManager.getTimeDistance(abs);
         zoomManager.moveVisibleArea(-time * sgn);
         startX = e.getX();
         component.requireRepaint();
@@ -96,12 +96,15 @@ public class MouseInteraction extends MouseAdapter {
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        if (layerManager.isEmpty()) {
+        if (timelineManager.isEmpty()) {
             return;
         }
         int x = e.getX();
-        if (x > layerManager.getHeaderWidth() || x < Layer.PADDING) {
-            selectionManager.selectTime(x);
+        int y = e.getY();
+        if (x > timelineManager.getLegendWidth() && (y > JTimeSelector.TOP_PADDING && y < timelineManager.getLayersBottomY())) {
+            y -= JTimeSelector.TOP_PADDING;
+            int layerIndex = y / TimeEntryLayer.HEIGHT;
+            selectionManager.selectTime(timelineManager.getTimeForX(x), layerIndex);
             intervalSelection.clearSelection();
             component.repaint();
             component.timeSelectionChanged();
@@ -120,8 +123,8 @@ public class MouseInteraction extends MouseAdapter {
                 a = x;
                 b = startX;
             }
-            long t1 = (long) layerManager.getTimeForX(a);
-            long t2 = (long) layerManager.getTimeForX(b);
+            long t1 = timelineManager.getTimeForX(a);
+            long t2 = timelineManager.getTimeForX(b);
             final long minTime = zoomManager.getCurrentMinTime();
             if (t1 < minTime) {
                 t1 = minTime;

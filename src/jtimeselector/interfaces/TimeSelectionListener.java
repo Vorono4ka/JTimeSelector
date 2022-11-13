@@ -1,7 +1,9 @@
 /*
  */
 
-package jtimeselector;
+package jtimeselector.interfaces;
+
+import jtimeselector.JTimeSelector;
 
 /**
  *

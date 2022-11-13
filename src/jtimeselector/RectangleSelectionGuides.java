@@ -2,8 +2,8 @@
  */
 package jtimeselector;
 
-import java.awt.Graphics2D;
-import static jtimeselector.JTimeSelector.RECT_COLOR_TRANSP;
+import java.awt.*;
+
 import static jtimeselector.JTimeSelector.TOP_PADDING;
 import jtimeselector.layers.Layer;
 
@@ -13,6 +13,7 @@ import jtimeselector.layers.Layer;
  * @author Tomas Prochazka 9.1.2016
  */
 public class RectangleSelectionGuides {
+    public static final Color COLOR = new Color(0xB3555555, true);
 
     private boolean rectSel = false;
     private int rectSelX1;
@@ -44,7 +45,7 @@ public class RectangleSelectionGuides {
 
     public void drawRectangleSelectionGuides(Graphics2D gr, int layersBottomY, int timelineStartX, int width) {
         //Rectangle selection:
-        gr.setColor(RECT_COLOR_TRANSP);
+        gr.setColor(COLOR);
         final int rectHeight = layersBottomY - TOP_PADDING;
         final int lineBottomY = layersBottomY + gr.getFontMetrics().getHeight();
         final int maxX = width-Layer.PADDING;

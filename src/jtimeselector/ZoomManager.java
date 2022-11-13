@@ -15,8 +15,8 @@ public class ZoomManager {
     long currentMin;
     long currentMax;
     boolean noZoom = true;
-    private static final double COEF = .8;
-    private static final double COEF_INV = 1.25;
+    private static final double RATIO = .8;
+    private static final double RATIO_INV = 1 / RATIO;
 
     public ZoomManager(long minTime, long maxTime) {
         updateMinAndMaxTime(minTime, maxTime);
@@ -28,13 +28,13 @@ public class ZoomManager {
     }
 
     public final void updateMinAndMaxTime(long minTime1, long maxTime1) {
-        this.minTime = minTime1;
+        this.minTime = 0;
         this.maxTime = maxTime1;
     }
 
-    public final void updateMinAndMaxTime(TimelineManager m) {
-        this.minTime = m.getMinTime();
-        this.maxTime = m.getMaxTime();
+    public final void updateMinAndMaxTime(TimelineManager timelineManager) {
+        this.minTime = 0;
+        this.maxTime = timelineManager.getMaxTime();
         if (noZoom) {
             setDefaultZoom();
         } else {
@@ -75,17 +75,17 @@ public class ZoomManager {
     }
 
     private void zoomIn(long center) {
-        currentMin = (long)(center - (center - currentMin) * COEF);
-        currentMax = (long)(center + (currentMax - center) * COEF);
+        currentMin = (long)(center - (center - currentMin) * RATIO);
+        currentMax = (long)(center + (currentMax - center) * RATIO);
         
     }
 
     private void zoomOut(long center) {
-        currentMin = (long)(center - (center - currentMin) * COEF_INV);
-        currentMax = (long)(center + (currentMax - center) * COEF_INV);
+        currentMin = (long)(center - (center - currentMin) * RATIO_INV);
+        currentMax = (long)(center + (currentMax - center) * RATIO_INV);
     }
+
     /**
-     * p
      * @param timeOffset positive or negative value that will be added to the current interval
      */
     public void moveVisibleArea(long timeOffset) {
@@ -94,6 +94,7 @@ public class ZoomManager {
         currentMin+=timeOffset;
         currentMax+=timeOffset;
     }
+
     public boolean timeValueInCurrentRange(long time) {
         return time>=currentMin&&time<=currentMax;
     }

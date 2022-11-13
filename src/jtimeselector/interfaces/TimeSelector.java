@@ -1,7 +1,10 @@
 /*
  */
 
-package jtimeselector;
+package jtimeselector.interfaces;
+
+import jtimeselector.LongRange;
+import jtimeselector.TimeSelectionType;
 
 /**
  *
@@ -42,6 +45,7 @@ public interface TimeSelector {
      * @param d 
      */
     void selectTime(long d);
+
     /**
      * Using this method the selected time interval can be set from outside. 
      * @param from

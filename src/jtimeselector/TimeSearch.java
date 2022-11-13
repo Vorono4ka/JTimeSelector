@@ -17,9 +17,9 @@ public class TimeSearch {
      * @param array array of long ints sorted in the ascending order
      * @param value
      * @return index of first element that is greater than or equal to the given
-     * value or array.length if no such element exists
+     * value or array length if no such element exists
      */
-    public static int firstGreaterThanOrEqual( long[] array, long value) {
+    public static int firstGreaterThanOrEqual(long[] array, long value) {
         int res = Arrays.binarySearch(array, value);
         if (res >= 0) {  //array contains the given value
             while (res - 1 >= 0) {
@@ -33,7 +33,6 @@ public class TimeSearch {
         }
         int insertionPoint = -(res + 1);  //insertion point according to the binarySearch docs
         return insertionPoint;
-
     }
 
     /**
@@ -73,7 +72,7 @@ public class TimeSearch {
     public static int indexOfClosest(long[] array, long value) {
         if (array.length==0) return -1;
         int res = Arrays.binarySearch(array, value);
-        if (res >= 0) { //array contains the given value, find the leftmost ocurrence
+        if (res >= 0) { // array contains the given value, find the leftmost occurrence
             while (res - 1 >= 0) {
                 if (array[res - 1] == value) {
                     res--;
@@ -83,7 +82,7 @@ public class TimeSearch {
             }
              return res;
         }
-        int insertionPoint = -(res + 1); //insertion point according to the binarySearch docs
+        int insertionPoint = -(res + 1); // insertion point according to the binarySearch docs
         if (insertionPoint - 1 < 0) {
             return insertionPoint;
         }
@@ -98,7 +97,7 @@ public class TimeSearch {
         } else {
             res=  insertionPoint;
         }
-        while (res-1>=0) { //get the leftmost occurence
+        while (res-1>=0) { //get the leftmost occurrence
             if (array[res-1]==array[res]) {
                 res--;
             } else {
@@ -107,5 +106,4 @@ public class TimeSearch {
         }
         return res;
     }
-
 }

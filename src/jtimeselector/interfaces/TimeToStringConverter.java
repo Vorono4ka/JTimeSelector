@@ -1,7 +1,7 @@
 /*
  */
 
-package jtimeselector;
+package jtimeselector.interfaces;
 
 /**
  *

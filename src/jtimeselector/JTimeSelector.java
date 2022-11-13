@@ -8,13 +8,17 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.event.InputEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
+
+import com.vorono4ka.MathHelper;
+import jtimeselector.interfaces.TimeSelectionListener;
+import jtimeselector.interfaces.TimeSelector;
+import jtimeselector.interfaces.TimeToStringConverter;
 import jtimeselector.layers.Layer;
 import jtimeselector.layers.TimelineManager;
 import jtimeselector.layers.TimeEntryLayer;
@@ -27,7 +31,7 @@ import jtimeselector.layers.TimeEntryLayer;
  * }.
  * <p>
  * It is possible to attach listeners that will be notified of changes in
- * selection (method {@link #addTimeSelectionChangedListener(jtimeselector.TimeSelectionListener)
+ * selection (method {@link #addTimeSelectionChangedListener(TimeSelectionListener)
  * }).
  * <p>
  * A time or a time interval can also be set from outside using {@link #selectTime(long)
@@ -35,7 +39,7 @@ import jtimeselector.layers.TimeEntryLayer;
  * <p>
  * It is possible to set how the time should be displayed to the user, an
  * instance of {@link TimeToStringConverter} can be set either by constructor or
- * explicitly by the setter method {@link #setTimeToStringConverter(jtimeselector.TimeToStringConverter)
+ * explicitly by the setter method {@link #setTimeToStringConverter(TimeToStringConverter)
  * }
  *
  * @author Tomas Prochazka 5.12.2015
@@ -43,19 +47,18 @@ import jtimeselector.layers.TimeEntryLayer;
 public class JTimeSelector extends JPanel implements TimeSelector {
 
     private static final long serialVersionUID = 1L;
+    public static final Color BACKGROUND_COLOR = Color.white;
 
     private BufferedImage image;
     private int oldWidth = 0;
     private int oldHeight = 0;
-    private final TimelineManager layerManager;
+    private final TimelineManager timelineManager;
     private final ZoomManager zoomManager = new ZoomManager();
     private final TimeSelectionManager timeSelection;
     private boolean requireRepaint = false;
-    private Color backgroundColor;
-    public static final Color RECT_COLOR_TRANSP = new Color(217, 118, 12, 70);
-    private List<TimeSelectionListener> listeners = new ArrayList<>();
+    private final List<TimeSelectionListener> listeners = new ArrayList<>();
+    private final RectangleSelectionGuides rectangleGuides = new RectangleSelectionGuides();
     public static final int TOP_PADDING = 10;
-    private RectangleSelectionGuides rectangleGuides = new RectangleSelectionGuides();
 
     /**
      * Test.
@@ -72,21 +75,18 @@ public class JTimeSelector extends JPanel implements TimeSelector {
      * test method only
      */
     public static void createGUI() {
-        JFrame f = new JFrame("Time Selector Test");
-        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        f.setLayout(new BorderLayout());
-        final JTimeSelector jTimeSelector = new JTimeSelector((x) -> {
-            return Long.toString(x / 1000);
-        });
-        f.add(jTimeSelector);
+        JFrame frame = new JFrame("Time Selector Test");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(new BorderLayout());
+        final JTimeSelector jTimeSelector = new JTimeSelector((x) -> Float.toString(x / 1000f));
+        frame.add(new JScrollPane(jTimeSelector));
         jTimeSelector.addTimeValuesLayer("Test Layer", new long[]{1000, 2000, 3000, 4000, 5000, 6000});
         jTimeSelector.addTimeValuesLayer("Test Layer 2", new long[]{2_000, 3_000, 4_000, 5_000, 6_000, 8_000, 10_000, 15_000, 16_000});
-        jTimeSelector.addTimeValuesLayer("Third Test Layer", new long[]{-6_000, -1_000, 0_000, 1_000, 2_000, 3_000, 4_000, 5_000, 6_000, 7_000});
         jTimeSelector.addTimeValuesLayer("Empty layer", new long[]{});
         //jTimeSelector.addTimeValuesLayer("Empty layer 2", new long[]{});
         //jTimeSelector.addTimeValuesLayer("Empty layer 3", new long[]{});
-        f.setSize(800, 400);
-        f.setVisible(true);
+        frame.setSize(800, 400);
+        frame.setVisible(true);
         // test of the correct behaviour if layers are added/removed:
 //        new Thread(() -> {
 //            try {
@@ -101,30 +101,24 @@ public class JTimeSelector extends JPanel implements TimeSelector {
 //            } catch (InterruptedException ex) {
 //                Logger.getLogger(JTimeSelector.class.getName()).log(Level.SEVERE, null, ex);
 //            }
-//            jTimeSelector.addTimeValuesLayer("TestLayer 2nd phase", new long[]{2, 3, 4, 5, 6, 8, 10, 15, 16});
+//            jTimeSelector.addTimeValuesLayer("TestLayer 2nd phase", new long[]{2_000L, 3_000L, 4_000L, 5_000L, 6_000L, 8_000L, 10_000L, 15_000L, 16_000L});
 //            jTimeSelector.requireRepaint();
 //            try {
 //                Thread.sleep(2000);
 //            } catch (InterruptedException ex) {
 //                Logger.getLogger(JTimeSelector.class.getName()).log(Level.SEVERE, null, ex);
 //            }
-//            jTimeSelector.addTimeValuesLayer("NewLayer", new long[]{1.2, 2, 3, 4, 5, 6});
+//            jTimeSelector.addTimeValuesLayer("NewLayer", new long[]{1_200L, 2_000L, 3_000L, 4_000L, 5_000L, 6_000L});
+//            jTimeSelector.requireRepaint();
 //
 //        }).start();
         jTimeSelector.addTimeSelectionChangedListener((x) -> {
-            String type = "";
-            switch (x.getTimeSelectionType()) {
-                case SingleValue:
-                    type = "single value";
-                    break;
-                case Interval:
-                    type = "interval";
-                    break;
-                case None:
-                    type = "none";
-                    break;
-            }
-            System.out.println("Time selection chaned to " + type);
+            String type = switch (x.getTimeSelectionType()) {
+                case SingleValue -> "single value";
+                case Interval -> "interval";
+                case None -> "none";
+            };
+            System.out.println("Time selection changed to " + type);
         });
     }
     private final IntervalSelectionManager intervalSelection;
@@ -148,37 +142,12 @@ public class JTimeSelector extends JPanel implements TimeSelector {
      * @param converter a function converting long time values to string
      */
     public JTimeSelector(TimeToStringConverter converter) {
-        layerManager = new TimelineManager(zoomManager, converter);
-        timeSelection = new TimeSelectionManager(layerManager, zoomManager);
-        intervalSelection = new IntervalSelectionManager(layerManager, zoomManager);
+        timelineManager = new TimelineManager(zoomManager, converter);
+        timeSelection = new TimeSelectionManager(timelineManager, zoomManager);
+        intervalSelection = new IntervalSelectionManager(timelineManager, zoomManager);
         setFont(getFont().deriveFont(15f));
-        addMouseWheelListener((MouseWheelEvent e) -> {
-            final double preciseWheelRotation = e.getPreciseWheelRotation();
-            int rotation = (int) Math.round(preciseWheelRotation * 4);
-            //Limit the rotation to compensate the different behaviour 
-            // of mouse and trackpad
-            if (rotation < -3) {
-                rotation = -3;
-            }
-            if (rotation > 3) {
-                rotation = 3;
-            }
-            long time = layerManager.getTimeForX(e.getX());
-            final long currentMinTime = zoomManager.getCurrentMinTime();
-            final long currentMaxTime = zoomManager.getCurrentMaxTime();
-            if (time < currentMinTime || time > currentMaxTime) {
-                return;
-            }
-            if (rotation < 0) {
-                zoomManager.zoomIn(-rotation, time);
-            } else {
-                zoomManager.zoomOut(rotation, time);
-            }
-            requireRepaint = true;
-            repaint();
-
-        });
-        final MouseInteraction mouseInteraction = new MouseInteraction(layerManager,
+        addMouseWheelListener(this::mouseWheelMoved);
+        final MouseInteraction mouseInteraction = new MouseInteraction(timelineManager,
                 zoomManager, this, timeSelection,
                 rectangleGuides, intervalSelection);
         addMouseListener(mouseInteraction);
@@ -201,19 +170,19 @@ public class JTimeSelector extends JPanel implements TimeSelector {
         gr.setFont(getFont());
 
         if (rectangleGuides.visible()) {
-            rectangleGuides.drawRectangleSelectionGuides(gr, layerManager.getLayersBottomY(), layerManager.getHeaderWidth() - Layer.POINT_RADIUS, layerManager.getCurrentWidth());
+            rectangleGuides.drawRectangleSelectionGuides(gr, timelineManager.getLayersBottomY(), timelineManager.getLegendWidth() - Layer.POINT_RADIUS, timelineManager.getCurrentWidth());
         } else {
             timeSelection.drawSelectedTime(gr);
-            if (timeSelection.isSelection()) {
-                layerManager.drawTimeSelectionEffects(gr, TOP_PADDING, (long) timeSelection.getSelectedTime());
+            if (timeSelection.hasSelection()) {
+                timelineManager.drawTimeSelectionEffects(gr, TOP_PADDING, timeSelection.getSelectedTime(), timeSelection.getSelectedLayer());
             }
-            if (intervalSelection.isSelection()) {
+            if (intervalSelection.hasSelection()) {
                 intervalSelection.drawIntervalSelection(gr);
-                layerManager.drawIntervalSelectionEffects(gr, TOP_PADDING, (long) intervalSelection.getT1(), (long) intervalSelection.getT2());
+                timelineManager.drawIntervalSelectionEffects(gr, TOP_PADDING, intervalSelection.getT1(), intervalSelection.getT2());
             }
         }
-        if (!layerManager.isEmpty()) {
-            layerManager.drawTimeLabels(gr, layerManager.getLayersBottomY(),
+        if (!timelineManager.isEmpty()) {
+            timelineManager.drawTimeLabels(gr, timelineManager.getLayersBottomY(),
                     zoomManager.getCurrentMinTime(), zoomManager.getCurrentMaxTime(),
                     timeSelection, intervalSelection);
         }
@@ -221,24 +190,22 @@ public class JTimeSelector extends JPanel implements TimeSelector {
     }
 
     protected void repaintImage() {
-
         Dimension size = getSize();
         oldWidth = size.width;
         oldHeight = size.height;
         Graphics2D g = image.createGraphics();
         g.setFont(getFont());
-        layerManager.setFontHeight(g.getFontMetrics().getHeight());
+        timelineManager.setFontHeight(g.getFontMetrics().getHeight());
 
         g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL,
                 RenderingHints.VALUE_STROKE_PURE);
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        backgroundColor = Color.white;
-        g.setColor(backgroundColor);
-        g.fillRect(0, 0, oldWidth, oldHeight);
-        if (!layerManager.isEmpty()) {
-            layerManager.drawLayers(g, TOP_PADDING, oldWidth, oldHeight);
-        }
 
+        g.setColor(BACKGROUND_COLOR);
+        g.fillRect(0, 0, oldWidth, oldHeight);
+        if (!timelineManager.isEmpty()) {
+            timelineManager.drawLayers(g, TOP_PADDING, oldWidth, oldHeight);
+        }
     }
 
     @Override
@@ -252,8 +219,8 @@ public class JTimeSelector extends JPanel implements TimeSelector {
      */
     @Override
     public void addTimeValuesLayer(String name, long[] timeValues) {
-        layerManager.addLayer(new TimeEntryLayer(name, timeValues));
-        zoomManager.updateMinAndMaxTime(layerManager);
+        timelineManager.addLayer(new TimeEntryLayer(name, timeValues));
+        zoomManager.updateMinAndMaxTime(timelineManager);
     }
 
     /**
@@ -261,8 +228,8 @@ public class JTimeSelector extends JPanel implements TimeSelector {
      */
     @Override
     public void removeGraphLayer(String name) {
-        layerManager.removeLayer(name);
-        zoomManager.updateMinAndMaxTime(layerManager);
+        timelineManager.removeLayer(name);
+        zoomManager.updateMinAndMaxTime(timelineManager);
         if (!timeSelection.checkBounds()) {
             timeSelectionChanged();
         }
@@ -273,10 +240,12 @@ public class JTimeSelector extends JPanel implements TimeSelector {
      */
     @Override
     public void removeAllGraphLayers() {
-        layerManager.removeAllLayers();
-        timeSelection.checkBounds();
+        timelineManager.removeAllLayers();
         if (!timeSelection.checkBounds()) {
             timeSelectionChanged();
+        }
+        if (intervalSelection.hasSelection()) {
+            intervalSelection.clearSelection();
         }
     }
 
@@ -285,18 +254,19 @@ public class JTimeSelector extends JPanel implements TimeSelector {
      */
     @Override
     public Long getSelectedTime() {
-        if (timeSelection.isSelection() == false) {
+        if (!timeSelection.hasSelection()) {
             return null;
         }
-        return (long) timeSelection.getSelectedTime();
+
+        return timeSelection.getSelectedTime();
     }
 
     /**
      * {@inheritDoc }
      */
     @Override
-    public void selectTime(long d) {
-        timeSelection.selectTime(d);
+    public void selectTime(long time) {
+        timeSelection.selectTime(time, 0);
         intervalSelection.clearSelection();
         repaint();
         timeSelectionChanged();
@@ -318,8 +288,8 @@ public class JTimeSelector extends JPanel implements TimeSelector {
      */
     @Override
     public LongRange getSelectedTimeInterval() {
-        if (intervalSelection.isSelection()) {
-            return new LongRange((long) intervalSelection.getT1(), (long) intervalSelection.getT2());
+        if (intervalSelection.hasSelection()) {
+            return new LongRange(intervalSelection.getT1(), intervalSelection.getT2());
         } else {
             return null;
         }
@@ -329,10 +299,10 @@ public class JTimeSelector extends JPanel implements TimeSelector {
      */
     @Override
     public TimeSelectionType getTimeSelectionType() {
-        if (timeSelection.isSelection()) {
+        if (timeSelection.hasSelection()) {
             return TimeSelectionType.SingleValue;
         }
-        if (intervalSelection.isSelection()) {
+        if (intervalSelection.hasSelection()) {
             return TimeSelectionType.Interval;
         }
         return TimeSelectionType.None;
@@ -350,17 +320,7 @@ public class JTimeSelector extends JPanel implements TimeSelector {
 
     protected void timeSelectionChanged() {
         List<TimeSelectionListener> copy = new ArrayList<>(listeners);
-        copy.stream().forEach((l) -> {
-            l.timeSelectionChanged(this);
-        });
-    }
-
-    public Color getBackgroundColor() {
-        return backgroundColor;
-    }
-
-    public void setBackgroundColor(Color backgroundColor) {
-        this.backgroundColor = backgroundColor;
+        copy.forEach((l) -> l.timeSelectionChanged(this));
     }
 
     /**
@@ -371,7 +331,34 @@ public class JTimeSelector extends JPanel implements TimeSelector {
      */
     @Override
     public void setTimeToStringConverter(TimeToStringConverter converter) {
-        layerManager.setConverter(converter);
+        timelineManager.setConverter(converter);
     }
 
+    private void mouseWheelMoved(MouseWheelEvent e) {
+        int modifiersEx = e.getModifiersEx();
+
+        int ctrlDownMask = InputEvent.CTRL_DOWN_MASK;
+        if ((modifiersEx & ctrlDownMask) == ctrlDownMask) {
+            final double preciseWheelRotation = e.getPreciseWheelRotation();
+            // Limit the rotation to compensate the different behaviour of mouse and trackpad
+            int rotation = MathHelper.clamp((int) Math.round(preciseWheelRotation * 4), -3, 3);
+            long time = timelineManager.getTimeForX(e.getX());
+            final long currentMinTime = zoomManager.getCurrentMinTime();
+            final long currentMaxTime = zoomManager.getCurrentMaxTime();
+            if (time < currentMinTime || time > currentMaxTime) {
+                return;
+            }
+
+            if (rotation < 0) {
+                zoomManager.zoomIn(-rotation, time);
+            } else {
+                zoomManager.zoomOut(rotation, time);
+            }
+        } else {
+            return;
+        }
+
+        requireRepaint = true;
+        repaint();
+    }
 }

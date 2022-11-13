@@ -15,31 +15,29 @@ public class IntervalSelectionManager {
 
     private long t1;
     private long t2;
-    private boolean selection = false;
-    private final TimelineManager tm;
-    private final ZoomManager z;
+    private boolean hasSelection = false;
+    private final TimelineManager timelineManager;
+    private final ZoomManager zoomManager;
     int str1x1, str1x2, str2x1, str2x2;
 
-    public IntervalSelectionManager(TimelineManager tm, ZoomManager z) {
-        this.tm = tm;
-        this.z = z;
+    public IntervalSelectionManager(TimelineManager timelineManager, ZoomManager zoomManager) {
+        this.timelineManager = timelineManager;
+        this.zoomManager = zoomManager;
     }
 
- 
-
     public void clearSelection() {
-        if (selection == false) {
+        if (!hasSelection) {
             return;
         }
-        selection = false;
+        hasSelection = false;
     }
 
     public void setSelection(int x1, int x2) {
-        setSelection(tm.getTimeForX(x1), tm.getTimeForX(x2));
+        setSelection(timelineManager.getTimeForX(x1), timelineManager.getTimeForX(x2));
     }
 
     public void setSelection(long t1, long t2) {
-        selection = true;
+        hasSelection = true;
         this.t1 = t1;
         this.t2 = t2;
     }
@@ -52,22 +50,22 @@ public class IntervalSelectionManager {
         return t2;
     }
 
-    public boolean isSelection() {
-        return selection;
+    public boolean hasSelection() {
+        return hasSelection;
     }
 
     public void drawIntervalSelection(Graphics2D g) {
-        if (!selection) {
+        if (!hasSelection) {
             return;
         }
-        drawLeft = z.timeValueInCurrentRange((long)t1);
-        drawRight = z.timeValueInCurrentRange((long)t2);
+        drawLeft = zoomManager.timeValueInCurrentRange(t1);
+        drawRight = zoomManager.timeValueInCurrentRange(t2);
         if (!drawLeft && !drawRight) {
             return;
         }
-        int x1 = tm.getXForTime(t1) + tm.getHeaderWidth();
-        int x2 = tm.getXForTime(t2) + tm.getHeaderWidth();
-        int textY = tm.getTimeLabelsBaselineY();
+        int x1 = timelineManager.getXForTime(t1) + timelineManager.getLegendWidth();
+        int x2 = timelineManager.getXForTime(t2) + timelineManager.getLegendWidth();
+        int textY = timelineManager.getTimeLabelsBaselineY();
         int topY = JTimeSelector.TOP_PADDING;
         g.setColor(TimeSelectionManager.SELECTION_COLOR);
         if (drawLeft) {
@@ -84,11 +82,11 @@ public class IntervalSelectionManager {
 
     private void drawLeftLabel(Graphics2D g, int textY, int x1, int x2, boolean rightDrawn) {
         FontMetrics fm = g.getFontMetrics();
-        String s = tm.getConverter().timeToString((long)t1);
+        String s = timelineManager.getConverter().timeToString(t1);
         int width = fm.stringWidth(s);
         str1x1 = x1 + Layer.PADDING; // |Label  | Label
         str1x2 = str1x1 + width;
-        if ((rightDrawn && str1x2 > x2) || str2x2 > tm.getCurrentWidth() - Layer.PADDING) {
+        if ((rightDrawn && str1x2 > x2) || str2x2 > timelineManager.getCurrentWidth() - Layer.PADDING) {
             str1x2 = x1 - Layer.PADDING;
             str1x1 = str1x2 - width;
         }
@@ -107,11 +105,11 @@ public class IntervalSelectionManager {
      */
     private void drawRightLabel(Graphics2D g, int textY, int x1, int x2, boolean leftDrawn) {
         FontMetrics fm = g.getFontMetrics();
-        String s = tm.getConverter().timeToString((long)t2);
+        String s = timelineManager.getConverter().timeToString((long)t2);
         int width = fm.stringWidth(s);
         str2x1 = x2 + Layer.PADDING;
         str2x2 = str2x1 + width;
-        if (str2x2 > tm.getCurrentWidth() - Layer.PADDING) {
+        if (str2x2 > timelineManager.getCurrentWidth() - Layer.PADDING) {
             int altright = x2 - Layer.PADDING;
             int altleft = altright - width;
             if (leftDrawn && altleft > str1x2) {
@@ -124,7 +122,7 @@ public class IntervalSelectionManager {
 
 
     public boolean labelsCollision(int a, int b) {
-        return selection
+        return hasSelection
                 && (IntervalCheck.collision(str1x1, str1x2, a, b) && drawLeft
                 || IntervalCheck.collision(str2x1, str2x2, a, b) && drawRight);
     }
@@ -136,15 +134,15 @@ public class IntervalSelectionManager {
      * @return false if change occurred
      */
     public boolean checkBounds() {
-        if (!selection) {
+        if (!hasSelection) {
             return true;
         }
-        if (tm.isEmpty()) {
+        if (timelineManager.isEmpty()) {
             clearSelection();
             return false;
         }
-        final long minTime = tm.getMinTime();
-        final long maxTime = tm.getMaxTime();
+        final long minTime = timelineManager.getMinTime();
+        final long maxTime = timelineManager.getMaxTime();
         boolean change= false;
         if (t1 < minTime) {
             t1 = minTime;

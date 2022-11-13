@@ -6,6 +6,7 @@ import java.awt.Color;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import jtimeselector.layers.Layer;
+import jtimeselector.layers.TimeEntryLayer;
 import jtimeselector.layers.TimelineManager;
 
 /**
@@ -13,12 +14,13 @@ import jtimeselector.layers.TimelineManager;
  * @author Tomas Prochazka 8.12.2015
  */
 public class TimeSelectionManager {
-
-    public static final Color SELECTION_COLOR = new Color(0xD9760C);
+    public static final Color SELECTION_COLOR = new Color(0x4b6eaf);
     private long selectedTime;
-    private boolean selection = false;
-    private final TimelineManager l;
-    private final ZoomManager z;
+    private int selectedLayer;
+    private boolean hasSelection = false;
+    private final TimelineManager timelineManager;
+    private final ZoomManager zoomManager;
+
     /**
      * The position on the component on which
      * the string time value has been drawn last time.
@@ -28,49 +30,60 @@ public class TimeSelectionManager {
     private int stringX1;
     private int stringX2;
 
-    public void selectTime(long time) {
-        selection = true;
-        this.selectedTime = time;
+    public void selectTime(long time, int layerIndex) {
+        long closestTime = timelineManager.getClosestTime(time, layerIndex);
 
+        if (Math.abs(closestTime - time) >= 150) {
+            hasSelection = false;
+            return;
+        }
+
+        hasSelection = true;
+        this.selectedTime = closestTime;
+        this.selectedLayer = layerIndex;
     }
-    public double getSelectedTime() {
+
+    public long getSelectedTime() {
         return selectedTime;
     }
 
-    public TimeSelectionManager(long selectedTime, TimelineManager l, ZoomManager z) {
+    public int getSelectedLayer() {
+        return selectedLayer;
+    }
+
+    public TimeSelectionManager(long selectedTime, TimelineManager timelineManager, ZoomManager zoomManager) {
         this.selectedTime = selectedTime;
-        this.l = l;
-        this.z = z;
+        this.timelineManager = timelineManager;
+        this.zoomManager = zoomManager;
     }
 
     /**
-     *
-     * @param l
-     * @param z
+     * @param timelineManager
+     * @param zoomManager
      */
-    public TimeSelectionManager(TimelineManager l, ZoomManager z) {
-        this(0, l, z);
+    public TimeSelectionManager(TimelineManager timelineManager, ZoomManager zoomManager) {
+        this(0, timelineManager, zoomManager);
     }
 
     public void drawSelectedTime(Graphics2D g) {
-        if (!selection) {
+        if (!hasSelection) {
             return;
         }
-        if (!z.timeValueInCurrentRange((long)selectedTime)) {
+        if (!zoomManager.timeValueInCurrentRange(selectedTime)) {
             return;
         }
-        int x = l.getHeaderWidth() + l.getXForTime(selectedTime);
+        int x = timelineManager.getLegendWidth() + timelineManager.getXForTime(selectedTime);
         g.setColor(SELECTION_COLOR);
         FontMetrics fontMetrics = g.getFontMetrics();
-        String timeStr = l.getConverter().timeToString((long)selectedTime);
+        String timeStr = timelineManager.getConverter().timeToString((long)selectedTime);
         int textWidth = fontMetrics.stringWidth(timeStr);
-        if (x+textWidth+2*Layer.PADDING>l.getCurrentWidth()) {
+        if (x+textWidth+2*Layer.PADDING> timelineManager.getCurrentWidth()) {
             //draw the text on the left from the vertical line
             stringX1=x-Layer.PADDING-textWidth;
         } else {
             stringX1 = x+Layer.PADDING;
         }
-        final int bottomY = l.getTimeLabelsBaselineY();
+        final int bottomY = timelineManager.getTimeLabelsBaselineY();
         stringX2 = stringX1+textWidth;
         g.drawString(timeStr, stringX1, bottomY);
         g.drawLine(x, JTimeSelector.TOP_PADDING, x, bottomY);
@@ -83,12 +96,12 @@ public class TimeSelectionManager {
      * @param x x-coordinate of whole JTimeSelector component
      */
     public void selectTime(int x) {
-        long time = l.getTimeForX(x);
-        selectTime(time);
+        long time = timelineManager.getTimeForX(x);
+        selectTime(time, 1);
     }
 
-    public boolean isSelection() {
-        return selection;
+    public boolean hasSelection() {
+        return hasSelection;
     }
 
     /**
@@ -98,13 +111,13 @@ public class TimeSelectionManager {
      * @return false if change occurred
      */
     public boolean checkBounds() {
-        if (! selection) return true;
-        if (l.isEmpty()) {
+        if (!hasSelection) return true;
+        if (timelineManager.isEmpty()) {
             clearSelection();
             return false;
         }
-        if (selectedTime < l.getMinTime() || selectedTime > l.getMaxTime()) {
-            selectTime(l.getMinTime());
+        if (selectedTime < timelineManager.getMinTime() || selectedTime > timelineManager.getMaxTime()) {
+            selectTime(timelineManager.getMinTime(), 0);
             return false;
         }
         return true;
@@ -114,8 +127,8 @@ public class TimeSelectionManager {
      * Selection will not be displayed anymore.
      */
     public void clearSelection() {
-        if (selection==false) return;
-        selection = false;
+        if (hasSelection ==false) return;
+        hasSelection = false;
         selectedTime = 0;
     }
     /**
@@ -126,7 +139,7 @@ public class TimeSelectionManager {
      * @return true if intervals overlap
      */
     public boolean labelCollision(int a, int b) {
-        return selection 
+        return hasSelection
                 && IntervalCheck.collision(stringX1, stringX2, a, b);
     }
 

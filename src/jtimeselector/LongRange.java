@@ -9,7 +9,6 @@ package jtimeselector;
  * 5.12.2015
  */
 public class LongRange {
-
     public LongRange(long a, long b) {
         this.a = a;
         this.b = b;
