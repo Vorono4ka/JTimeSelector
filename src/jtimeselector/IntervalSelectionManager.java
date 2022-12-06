@@ -1,12 +1,13 @@
 package jtimeselector;
 
 import com.vorono4ka.MathHelper;
+import com.vorono4ka.interfaces.SelectionManager;
 import jtimeselector.layers.TimelineManager;
 
-public class IntervalSelectionManager {
+public class IntervalSelectionManager implements SelectionManager {
     private final TimelineManager timelineManager;
 
-    private boolean hasSelection = false;
+    private boolean hasSelection;
     private long fromTime;
     private long toTime;
     private int fromLayer;
@@ -14,13 +15,6 @@ public class IntervalSelectionManager {
 
     public IntervalSelectionManager(TimelineManager timelineManager) {
         this.timelineManager = timelineManager;
-    }
-
-    public void clearSelection() {
-        if (!hasSelection) {
-            return;
-        }
-
         hasSelection = false;
     }
 
@@ -47,6 +41,14 @@ public class IntervalSelectionManager {
         this.toTime = right;
         this.fromLayer = fromLayer;
         this.toLayer = toLayer;
+    }
+
+    public void clearSelection() {
+        if (!hasSelection) {
+            return;
+        }
+
+        hasSelection = false;
     }
 
     public boolean hasSelection() {

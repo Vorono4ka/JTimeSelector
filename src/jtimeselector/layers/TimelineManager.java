@@ -201,13 +201,13 @@ public class TimelineManager {
 
         left = legendWidth;
         right = legendWidth + stringFromWidth;
-        if (this.isLabelsCollision(left, right)) {
+        if (!this.isLabelsCollision(left, right)) {
             graphics.drawString(timeFromString, left, baseline);
         }
 
         left = legendWidth + timelineWidth - timeToStringWidth;
         right = left + timeToStringWidth;
-        if (this.isLabelsCollision(left, right)) {
+        if (!this.isLabelsCollision(left, right)) {
             graphics.drawString(timeToString, left, baseline);
         }
     }
@@ -331,7 +331,7 @@ public class TimelineManager {
     }
 
     public void setSelection(long time, int layerIndex) {
-        timeSelection.selectTime(time, layerIndex);
+        timeSelection.setSelection(time, layerIndex);
         intervalSelection.clearSelection();
     }
 

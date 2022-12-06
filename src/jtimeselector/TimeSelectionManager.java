@@ -2,9 +2,10 @@ package jtimeselector;
 
 import java.awt.Color;
 
+import com.vorono4ka.interfaces.SelectionManager;
 import jtimeselector.layers.TimelineManager;
 
-public class TimeSelectionManager {
+public class TimeSelectionManager implements SelectionManager {
     public static final Color SELECTION_COLOR = new Color(0x4b6eaf);
     public static final Color CURSOR_COLOR = SELECTION_COLOR;
     public static final int SELECTION_THRESHOLD = 150;
@@ -34,7 +35,7 @@ public class TimeSelectionManager {
      * @param time time point in timeline
      * @param layerIndex selected layer index
      */
-    public void selectTime(long time, int layerIndex) {
+    public void setSelection(long time, int layerIndex) {
         long closestTime = timelineManager.getClosestTime(time, layerIndex);
 
         if (Math.abs(closestTime - time) >= TimeSelectionManager.SELECTION_THRESHOLD) {
@@ -55,6 +56,14 @@ public class TimeSelectionManager {
         return selectedLayer;
     }
 
+    public void clearSelection() {
+        if (!hasSelection) {
+            return;
+        }
+
+        hasSelection = false;
+    }
+
     public boolean hasSelection() {
         return hasSelection;
     }
@@ -62,7 +71,7 @@ public class TimeSelectionManager {
     /**
      * Ensures that the selected time does not lie out of bounds. If it does,
      * the selected time is set to the minimal value.
-     * 
+     *
      * @return false if change occurred
      */
     public boolean checkBounds() {
@@ -72,20 +81,9 @@ public class TimeSelectionManager {
             return false;
         }
         if (selectedTime < timelineManager.getMinTime() || selectedTime > timelineManager.getMaxTime()) {
-            selectTime(timelineManager.getMinTime(), 0);
+            setSelection(timelineManager.getMinTime(), 0);
             return false;
         }
         return true;
-    }
-
-    /**
-     * Selection will not be displayed anymore.
-     */
-    public void clearSelection() {
-        if (hasSelection) {
-            hasSelection = false;
-            selectedTime = 0;
-            selectedLayer = -1;
-        }
     }
 }
