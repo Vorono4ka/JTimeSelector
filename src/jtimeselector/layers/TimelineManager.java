@@ -412,9 +412,6 @@ public class TimelineManager {
 
         cursorLabelXLeft = cursorX + Layer.PADDING;
         cursorLabelXRight = cursorLabelXLeft + width;
-        if (cursorLabelXRight > this.width - Layer.PADDING) {
-            cursorLabelXRight = cursorX - Layer.PADDING;
-        }
 
         graphics.drawString(string, cursorLabelXLeft, textY);
     }
