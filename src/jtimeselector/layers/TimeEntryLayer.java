@@ -4,7 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 
 import com.vorono4ka.LongList;
-import com.vorono4ka.interfaces.BinarySearcher;
+import com.vorono4ka.BinarySearcher;
 import jtimeselector.TimeSelectionManager;
 import jtimeselector.VisibleAreaManager;
 

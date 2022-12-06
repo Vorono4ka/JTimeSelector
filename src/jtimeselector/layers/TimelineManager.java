@@ -6,7 +6,7 @@ import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.util.*;
 
-import com.vorono4ka.interfaces.BinarySearcher;
+import com.vorono4ka.BinarySearcher;
 import jtimeselector.*;
 import jtimeselector.interfaces.TimeToStringConverter;
 

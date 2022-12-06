@@ -1,6 +1,6 @@
 package jtimeselector;
 
-import com.vorono4ka.interfaces.BinarySearcher;
+import com.vorono4ka.BinarySearcher;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

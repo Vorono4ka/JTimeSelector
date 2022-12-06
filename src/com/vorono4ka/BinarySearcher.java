@@ -1,4 +1,4 @@
-package com.vorono4ka.interfaces;
+package com.vorono4ka;
 
 import java.util.Arrays;
 
