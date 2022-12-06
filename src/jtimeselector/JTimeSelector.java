@@ -92,7 +92,7 @@ public class JTimeSelector extends JPanel implements TimeSelector {
         graphics.setFont(getFont());
 
         if (rectangleGuides.isVisible()) {
-            rectangleGuides.drawRectangleSelectionGuides(graphics, timelineManager.getLegendWidth(), timelineManager.getWidth());
+            rectangleGuides.draw(graphics);
         } else if (timelineManager.hasSelection()) {
             timelineManager.drawSelectionEffects(graphics);
         }

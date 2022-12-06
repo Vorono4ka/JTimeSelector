@@ -1,6 +1,7 @@
 package jtimeselector;
 
 import com.vorono4ka.MathHelper;
+import jtimeselector.layers.Layer;
 import jtimeselector.layers.TimelineManager;
 
 import java.awt.event.MouseAdapter;
@@ -98,6 +99,14 @@ public class MouseInteraction extends MouseAdapter {
             top = startY;
             bottom = y;
         }
+
+        int legendWidth = timelineManager.getLegendWidth();
+        int width = timelineManager.getWidth();
+        int timelineBottom = timelineManager.getLayersBottomY();
+        left = MathHelper.clamp(left, legendWidth, width - Layer.PADDING);
+        right = MathHelper.clamp(right, legendWidth, width - Layer.PADDING);
+        top = MathHelper.clamp(top, TimelineManager.TOP_PADDING, timelineBottom);
+        bottom = MathHelper.clamp(bottom, TimelineManager.TOP_PADDING, timelineBottom);
 
         rectangleGuides.setSelectionRectangle(left, top, right, bottom);
         component.repaint();

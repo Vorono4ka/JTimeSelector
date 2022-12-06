@@ -1,8 +1,5 @@
 package jtimeselector;
 
-import com.vorono4ka.MathHelper;
-import jtimeselector.layers.Layer;
-
 import java.awt.*;
 
 /**
@@ -18,11 +15,8 @@ public class RectangleSelectionGuides {
     private int right;
     private int bottom;
 
-    public void drawRectangleSelectionGuides(Graphics2D graphics, int timelineStartX, int currentWidth) {
+    public void draw(Graphics2D graphics) {
         graphics.setColor(COLOR);
-        final int maxX = currentWidth-Layer.PADDING;
-        left = MathHelper.clamp(left, timelineStartX, maxX);
-        right = MathHelper.clamp(right, timelineStartX, maxX);
 
         final int width = right - left;
         final int height = bottom - top;
