@@ -1,24 +1,24 @@
-/*
- */
 package jtimeselector;
 
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+
+import com.vorono4ka.MathHelper;
 import jtimeselector.layers.Layer;
 import jtimeselector.layers.TimelineManager;
 
-/**
- *
- * @author Tomas Prochazka 9.1.2016
- */
 public class IntervalSelectionManager {
-
-    private long t1;
-    private long t2;
-    private boolean hasSelection = false;
     private final TimelineManager timelineManager;
     private final ZoomManager zoomManager;
-    int str1x1, str1x2, str2x1, str2x2;
+
+    private boolean hasSelection = false;
+    private long fromTime;
+    private long toTime;
+    private int fromLayer;
+    private int toLayer;
+    private int leftLabelXLeft, leftLabelXRight, rightLabelXLeft, rightLabelXRight;
+    private boolean drawRight;
+    private boolean drawLeft;
 
     public IntervalSelectionManager(TimelineManager timelineManager, ZoomManager zoomManager) {
         this.timelineManager = timelineManager;
@@ -29,68 +29,92 @@ public class IntervalSelectionManager {
         if (!hasSelection) {
             return;
         }
+
         hasSelection = false;
     }
 
-    public void setSelection(int x1, int x2) {
-        setSelection(timelineManager.getTimeForX(x1), timelineManager.getTimeForX(x2));
-    }
+    public void setSelection(long left, long right, int top, int bottom) {
+        top = MathHelper.clamp(top, 0, this.timelineManager.getLayersBottomY() - 1);
+        bottom = MathHelper.clamp(bottom, top, this.timelineManager.getLayersBottomY() - 1);
 
-    public void setSelection(long t1, long t2) {
-        hasSelection = true;
-        this.t1 = t1;
-        this.t2 = t2;
-    }
+        int fromLayer = Math.max(this.timelineManager.getLayerIndex(top), 0);
+        int toLayer = this.timelineManager.getLayerIndex(bottom);
 
-    public long getT1() {
-        return t1;
-    }
+        long closestFromTime = this.timelineManager.getClosestTime(left, fromLayer, toLayer);
+        long closestToTime = this.timelineManager.getClosestTime(right, fromLayer, toLayer);
 
-    public long getT2() {
-        return t2;
+        if (Math.abs(closestFromTime - left) < TimeSelectionManager.SELECTION_THRESHOLD) {
+            left = closestFromTime;
+        }
+
+        if (Math.abs(closestToTime - right) < TimeSelectionManager.SELECTION_THRESHOLD) {
+            right = closestToTime;
+        }
+
+        this.hasSelection = true;
+        this.fromTime = left;
+        this.toTime = right;
+        this.fromLayer = fromLayer;
+        this.toLayer = toLayer;
     }
 
     public boolean hasSelection() {
         return hasSelection;
     }
 
-    public void drawIntervalSelection(Graphics2D g) {
+    public long getFromTime() {
+        return fromTime;
+    }
+
+    public long getToTime() {
+        return toTime;
+    }
+
+    public int getFromLayer() {
+        return fromLayer;
+    }
+
+    public int getToLayer() {
+        return toLayer;
+    }
+
+    public void drawIntervalSelection(Graphics2D graphics) {
         if (!hasSelection) {
             return;
         }
-        drawLeft = zoomManager.timeValueInCurrentRange(t1);
-        drawRight = zoomManager.timeValueInCurrentRange(t2);
+
+        drawLeft = zoomManager.timeValueInCurrentRange(fromTime);
+        drawRight = zoomManager.timeValueInCurrentRange(toTime);
         if (!drawLeft && !drawRight) {
             return;
         }
-        int x1 = timelineManager.getXForTime(t1) + timelineManager.getLegendWidth();
-        int x2 = timelineManager.getXForTime(t2) + timelineManager.getLegendWidth();
+
+        int x1 = timelineManager.getXForTime(fromTime) + timelineManager.getLegendWidth();
+        int x2 = timelineManager.getXForTime(toTime) + timelineManager.getLegendWidth();
         int textY = timelineManager.getTimeLabelsBaselineY();
         int topY = JTimeSelector.TOP_PADDING;
-        g.setColor(TimeSelectionManager.SELECTION_COLOR);
+        graphics.setColor(TimeSelectionManager.SELECTION_COLOR);
         if (drawLeft) {
-            g.drawLine(x1, topY, x1, textY);
-            drawLeftLabel(g, textY, x1, x2, drawRight);
+            graphics.drawLine(x1, topY, x1, textY);
+            drawLeftLabel(graphics, textY, x1, x2, drawRight);
         }
         if (drawRight) {
-            g.drawLine(x2, topY, x2, textY);
-            drawRightLabel(g, textY, x1, x2, drawLeft);
+            graphics.drawLine(x2, topY, x2, textY);
+            drawRightLabel(graphics, textY, x2, drawLeft);
         }
     }
-    private boolean drawRight;
-    private boolean drawLeft;
 
     private void drawLeftLabel(Graphics2D g, int textY, int x1, int x2, boolean rightDrawn) {
         FontMetrics fm = g.getFontMetrics();
-        String s = timelineManager.getConverter().timeToString(t1);
+        String s = timelineManager.getConverter().timeToString(fromTime);
         int width = fm.stringWidth(s);
-        str1x1 = x1 + Layer.PADDING; // |Label  | Label
-        str1x2 = str1x1 + width;
-        if ((rightDrawn && str1x2 > x2) || str2x2 > timelineManager.getCurrentWidth() - Layer.PADDING) {
-            str1x2 = x1 - Layer.PADDING;
-            str1x1 = str1x2 - width;
+        leftLabelXLeft = x1 + Layer.PADDING; // |Label  | Label
+        leftLabelXRight = leftLabelXLeft + width;
+        if ((rightDrawn && leftLabelXRight > x2) || rightLabelXRight > timelineManager.getCurrentWidth() - Layer.PADDING) {
+            leftLabelXRight = x1 - Layer.PADDING;
+            leftLabelXLeft = leftLabelXRight - width;
         }
-        g.drawString(s, str1x1, textY);
+        g.drawString(s, leftLabelXLeft, textY);
     }
 
     /**
@@ -99,32 +123,33 @@ public class IntervalSelectionManager {
      *
      * @param g
      * @param textY
-     * @param x1
      * @param x2
      * @param leftDrawn
      */
-    private void drawRightLabel(Graphics2D g, int textY, int x1, int x2, boolean leftDrawn) {
-        FontMetrics fm = g.getFontMetrics();
-        String s = timelineManager.getConverter().timeToString((long)t2);
-        int width = fm.stringWidth(s);
-        str2x1 = x2 + Layer.PADDING;
-        str2x2 = str2x1 + width;
-        if (str2x2 > timelineManager.getCurrentWidth() - Layer.PADDING) {
-            int altright = x2 - Layer.PADDING;
-            int altleft = altright - width;
-            if (leftDrawn && altleft > str1x2) {
-                str2x1 = altleft; // |Label   Label|     or    Label|   Label|
-                str2x2 = altright;
+    private void drawRightLabel(Graphics2D g, int textY, int x2, boolean leftDrawn) {
+        FontMetrics fontMetrics = g.getFontMetrics();
+        String string = timelineManager.getConverter().timeToString(toTime);
+        int width = fontMetrics.stringWidth(string);
+
+        rightLabelXLeft = x2 + Layer.PADDING;
+        rightLabelXRight = rightLabelXLeft + width;
+        if (rightLabelXRight > timelineManager.getCurrentWidth() - Layer.PADDING) {
+            int altRight = x2 - Layer.PADDING;
+            int altLeft = altRight - width;
+            if (leftDrawn && altLeft > leftLabelXRight) {
+                rightLabelXLeft = altLeft; // |Label   Label|     or    Label|   Label|
+                rightLabelXRight = altRight;
             }
         }
-        g.drawString(s, str2x1, textY);
+        g.drawString(string, rightLabelXLeft, textY);
     }
 
 
     public boolean labelsCollision(int a, int b) {
-        return hasSelection
-                && (IntervalCheck.collision(str1x1, str1x2, a, b) && drawLeft
-                || IntervalCheck.collision(str2x1, str2x2, a, b) && drawRight);
+        return hasSelection && (
+            IntervalCheck.collision(leftLabelXLeft, leftLabelXRight, a, b) && drawLeft ||
+            IntervalCheck.collision(rightLabelXLeft, rightLabelXRight, a, b) && drawRight
+        );
     }
 
     /**
@@ -143,17 +168,15 @@ public class IntervalSelectionManager {
         }
         final long minTime = timelineManager.getMinTime();
         final long maxTime = timelineManager.getMaxTime();
-        boolean change= false;
-        if (t1 < minTime) {
-            t1 = minTime;
+        boolean change = false;
+        if (fromTime < minTime) {
+            fromTime = minTime;
             change = true;
         }
-        if (t2 > maxTime) {
-            t2 = maxTime;
-            change=true;
+        if (toTime > maxTime) {
+            toTime = maxTime;
+            change = true;
         }
         return !change;
-        
     }
-
 }

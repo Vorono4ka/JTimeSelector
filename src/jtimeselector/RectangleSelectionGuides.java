@@ -1,70 +1,49 @@
-/*
- */
 package jtimeselector;
 
-import java.awt.*;
-
-import static jtimeselector.JTimeSelector.TOP_PADDING;
+import com.vorono4ka.MathHelper;
 import jtimeselector.layers.Layer;
+
+import java.awt.*;
 
 /**
  * A class responsible for drawing the two straight lines that mark
  * the selected interval.
- * @author Tomas Prochazka 9.1.2016
  */
 public class RectangleSelectionGuides {
     public static final Color COLOR = new Color(0xB3555555, true);
 
-    private boolean rectSel = false;
-    private int rectSelX1;
-    private int rectSelX2;
+    private boolean selected = false;
+    private int left;
+    private int top;
+    private int right;
+    private int bottom;
 
-    public boolean visible() {
-        return rectSel;
+    public void drawRectangleSelectionGuides(Graphics2D graphics, int timelineStartX, int currentWidth) {
+        graphics.setColor(COLOR);
+        final int maxX = currentWidth-Layer.PADDING;
+        left = MathHelper.clamp(left, timelineStartX, maxX);
+        right = MathHelper.clamp(right, timelineStartX, maxX);
+
+        final int width = right - left;
+        final int height = bottom - top;
+
+        graphics.fillRect(left, top, width, height);
+        graphics.setColor(TimeSelectionManager.SELECTION_COLOR);
+        graphics.drawRect(left, top, width, height);
+    }
+
+    public void setSelectionRectangle(int left, int top, int right, int bottom) {
+        this.left = left;
+        this.top = top;
+        this.right = right;
+        this.bottom = bottom;
+    }
+
+    public boolean isVisible() {
+        return selected;
     }
 
     public void setVisible(boolean rectSel) {
-        this.rectSel = rectSel;
+        this.selected = rectSel;
     }
-
-    public int getRectSelX1() {
-        return rectSelX1;
-    }
-
-    public void setRectSelX1(int rectSelX1) {
-        this.rectSelX1 = rectSelX1;
-    }
-
-    public int getRectSelX2() {
-        return rectSelX2;
-    }
-
-    public void setRectSelX2(int rectSelX2) {
-        this.rectSelX2 = rectSelX2;
-    }
-
-    public void drawRectangleSelectionGuides(Graphics2D gr, int layersBottomY, int timelineStartX, int width) {
-        //Rectangle selection:
-        gr.setColor(COLOR);
-        final int rectHeight = layersBottomY - TOP_PADDING;
-        final int lineBottomY = layersBottomY + gr.getFontMetrics().getHeight();
-        final int maxX = width-Layer.PADDING;
-        rectSelX1 = clamp(rectSelX1,timelineStartX, maxX);
-        rectSelX2 = clamp(rectSelX2,timelineStartX,maxX);
-        
-        gr.fillRect(rectSelX1, TOP_PADDING, rectSelX2 - rectSelX1, rectHeight);
-        gr.setColor(TimeSelectionManager.SELECTION_COLOR);
-        gr.drawLine(rectSelX1, TOP_PADDING, rectSelX1, lineBottomY);
-        gr.drawLine(rectSelX2, TOP_PADDING, rectSelX2, lineBottomY);
-    }
-    public int clamp(int x, int from, int to) {
-        if (x<=from) {
-            return from;
-        }
-        if (x>=to) {
-            return to;
-        }
-        return x;
-    }
-
 }

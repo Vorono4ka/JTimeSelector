@@ -1,25 +1,17 @@
-/*
- */
-
 package jtimeselector;
 
-/**
- *
- * @author Tomas Prochazka
- * 9.1.2016
- */
 public class IntervalCheck {
     public static boolean collision(int a,int b,int x,int y) {
-        return x<b && y>a;
+        return x < b && y > a;
     }
+
     /**
-     * Returns true if point lies in unbounded interval (a,b)
-     * @param a
-     * @param b
+     * @param left
+     * @param right
      * @param point
-     * @return 
+     * @return true if point lies in unbounded interval (left, right)
      */
-    public static boolean pointIn(int a, int b, int point) {
-        return point>a && point<b;
+    public static boolean pointIn(int left, int right, int point) {
+        return point > left && point < right;
     }
 }

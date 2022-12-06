@@ -1,16 +1,7 @@
-/*
- */
-
 package jtimeselector.interfaces;
 
-import jtimeselector.LongRange;
 import jtimeselector.TimeSelectionType;
 
-/**
- *
- * @author Tomas Prochazka
- * 5.12.2015
- */
 public interface TimeSelector {
     /**
      * Adds a layer with a small circle for each time value in the list.
@@ -18,61 +9,69 @@ public interface TimeSelector {
      * @param timeValues time instants for which a small circle will be drawn on the timeline
      */
     void addTimeValuesLayer(String name, long[] timeValues);
+
     /**
-     * Removes the layer with the given name from the list of displayed layers.
-     * Does not automatically refresh/redraw the panel!
+     * Removes the layer with the given name from the list of displayed layers. Does not automatically refresh/redraw the panel!
      * @param name 
      */
     void removeGraphLayer(String name);
+
     /**
-     * Clears the list of displayed layers.
-     * Does not automatically redraw the component.
+     * Clears the list of displayed layers. Does not automatically redraw the component.
      */
     void removeAllGraphLayers();
     
     /**
-     *  Requires repainting of the component.
-     * (Use this if the list of layers has been changed.)
+     *  Requires repainting of the component. (Use this if the list of layers has been changed.)
      */
     void requireRepaint();
-    /**
-     * Gets currently selected time.
-     * @return Null if no time is selected.
-     */
-    Long getSelectedTime();
-    /**
-     * Using this method the selected time can be set from outside.
-     * @param d 
-     */
-    void selectTime(long d);
 
     /**
-     * Using this method the selected time interval can be set from outside. 
-     * @param from
-     * @param to 
+     * Gets currently selected time.
+     *
+     * @return {@code null} if no time is selected.
      */
-    void selectTimeInterval(long from, long to);
+    Long getSelectedTime();
+
     /**
-     * Gets currently selected time interval.
-     * @return Null if no time interval is selected (e.g. TimeSelectionType.SingleValue is selected)
+     * Using this method the selected time can be set from outside.
+     *
+     * @param time selected time point in the timeline
+     * @param layerIndex selected layer index
      */
-    LongRange getSelectedTimeInterval();
+    void selectTime(long time, int layerIndex);
+
+    /**
+     * Using this method the selected time interval can be set from outside.
+     *
+     * @param from time from selected
+     * @param to time to selected
+     * @param top y coordinate of the selection top
+     * @param bottom y coordinate of the selection bottom
+     */
+    void selectTimeInterval(long from, long to, int top, int bottom);
+
+
     /**
      * Sets the function which is used to convert double time values
      * to strings that are displayed on the panel.
+     *
      * @param converter new converter function
      */
     void setTimeToStringConverter(TimeToStringConverter converter);
+
     TimeSelectionType getTimeSelectionType();
+
     /**
      * Registers the given object as a new listener.  The listener will be notified of any change in the selected time.
-     * @param l listener
+     * @param selectionListener listener
      */
-    void addTimeSelectionChangedListener(TimeSelectionListener l);
+    void addTimeSelectionChangedListener(TimeSelectionListener selectionListener);
+
     /**
      * Removes the given object from the list of listeners.
      * If the object hasn't been registered, nothing happens.
-     * @param l listener
+     * @param selectionListener listener
      */
-    void removeTimeSelectionChangedListener(TimeSelectionListener l);
+    void removeTimeSelectionChangedListener(TimeSelectionListener selectionListener);
 }

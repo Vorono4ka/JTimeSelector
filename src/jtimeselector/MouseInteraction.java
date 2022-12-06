@@ -1,8 +1,5 @@
-/*
- */
 package jtimeselector;
 
-import jtimeselector.layers.TimeEntryLayer;
 import jtimeselector.layers.TimelineManager;
 
 import java.awt.event.MouseAdapter;
@@ -13,17 +10,18 @@ import java.awt.event.MouseEvent;
  * Notifies  {@link TimelineManager}, {@link ZoomManager}, {@link RectangleSelectionGuides}
  * and {@link IntervalSelectionManager} about the changes that were caused
  * by the user clicking / dragging / scrolling with the mouse.
- * @author Tomas Prochazka 8.1.2016
  */
 public class MouseInteraction extends MouseAdapter {
-    private int startX;
-    private boolean rectSelStarted = false;
-    TimelineManager timelineManager;
-    ZoomManager zoomManager;
-    JTimeSelector component;
-    TimeSelectionManager selectionManager;
-    RectangleSelectionGuides rectangleGuides;
+    private final TimelineManager timelineManager;
+    private final ZoomManager zoomManager;
+    private final JTimeSelector component;
+    private final TimeSelectionManager selectionManager;
+    private final RectangleSelectionGuides rectangleGuides;
     private final IntervalSelectionManager intervalSelection;
+
+    private int startX;
+    private int startY;
+    private boolean rectSelectionStarted = false;
 
     public MouseInteraction(TimelineManager timelineManager, ZoomManager zoomManager,
                             JTimeSelector component, TimeSelectionManager selectionManager,
@@ -43,15 +41,16 @@ public class MouseInteraction extends MouseAdapter {
             return;
         }
         startX = e.getX();
+        startY = e.getY();
         if (!e.isControlDown()) {
-            rectSelStarted = true;
+            rectSelectionStarted = true;
         }
     }
 
     @Override
     public void mouseDragged(MouseEvent e) {
         if (timelineManager.isEmpty()) {
-            rectSelStarted = false;
+            rectSelectionStarted = false;
             rectangleGuides.setVisible(false);
             return;
         }
@@ -59,7 +58,7 @@ public class MouseInteraction extends MouseAdapter {
             rangeSelectionDrag(e);
             return;
         }
-        rectSelStarted = false;
+        rectSelectionStarted = false;
         rectangleGuides.setVisible(false);
 
         int dist = e.getX() - startX;
@@ -78,19 +77,34 @@ public class MouseInteraction extends MouseAdapter {
         long time = timelineManager.getTimeDistance(abs);
         zoomManager.moveVisibleArea(-time * sgn);
         startX = e.getX();
+        startY = e.getY();
         component.requireRepaint();
     }
 
     private void rangeSelectionDrag(MouseEvent e) {
         rectangleGuides.setVisible(true);
+
+        int left, top, right, bottom;
+
         final int x = e.getX();
         if (startX > x) {
-            rectangleGuides.setRectSelX1(x);
-            rectangleGuides.setRectSelX2(startX);
+            left = x;
+            right = startX;
         } else {
-            rectangleGuides.setRectSelX1(startX);
-            rectangleGuides.setRectSelX2(x);
+            left = startX;
+            right = x;
         }
+
+        final int y = e.getY();
+        if (startY > y) {
+            top = y;
+            bottom = startY;
+        } else {
+            top = startY;
+            bottom = y;
+        }
+
+        rectangleGuides.setSelectionRectangle(left, top, right, bottom);
         component.repaint();
     }
 
@@ -99,48 +113,58 @@ public class MouseInteraction extends MouseAdapter {
         if (timelineManager.isEmpty()) {
             return;
         }
-        int x = e.getX();
-        int y = e.getY();
-        if (x > timelineManager.getLegendWidth() && (y > JTimeSelector.TOP_PADDING && y < timelineManager.getLayersBottomY())) {
-            y -= JTimeSelector.TOP_PADDING;
-            int layerIndex = y / TimeEntryLayer.HEIGHT;
-            selectionManager.selectTime(timelineManager.getTimeForX(x), layerIndex);
+
+        final int x = e.getX();
+        final int y = e.getY();
+        if (x > timelineManager.getLegendWidth()) {
             intervalSelection.clearSelection();
+            selectionManager.clearSelection();
+
+            long timeForX = timelineManager.getTimeForX(x);
+            int layerIndex = timelineManager.getLayerIndex(y);
+
+            if (layerIndex == -1) {
+                component.selectTimeInterval(timeForX, timeForX, JTimeSelector.TOP_PADDING, timelineManager.getLayersBottomY() - 1);
+            } else {
+                component.selectTime(timeForX, layerIndex);
+            }
+
             component.repaint();
-            component.timeSelectionChanged();
         }
     }
 
     @Override
-    public void mouseReleased(MouseEvent e) {
-        final int x = e.getX();
-        if (!e.isControlDown() && rectSelStarted && (startX != x)) {
-            int a, b;
+    public void mouseReleased(MouseEvent event) {
+        final int x = event.getX();
+        final int y = event.getY();
+        if (!event.isControlDown() && rectSelectionStarted && (startX != x) && (startY != y)) {
+            int left, right;
             if (startX <= x) {
-                a = startX;
-                b = x;
+                left = startX;
+                right = x;
             } else {
-                a = x;
-                b = startX;
+                left = x;
+                right = startX;
             }
-            long t1 = timelineManager.getTimeForX(a);
-            long t2 = timelineManager.getTimeForX(b);
+
+            int top, bottom;
+            if (startY <= y) {
+                top = startY;
+                bottom = y;
+            } else {
+                top = y;
+                bottom = startY;
+            }
             final long minTime = zoomManager.getCurrentMinTime();
-            if (t1 < minTime) {
-                t1 = minTime;
-            }
             final long maxTime = zoomManager.getCurrentMaxTime();
-            if (t2 > maxTime) {
-                t2 = maxTime;
-            }
-            intervalSelection.setSelection(t1, t2);
-            selectionManager.clearSelection();
-            component.timeSelectionChanged();
+
+            long timeLeft = Math.max(timelineManager.getTimeForX(left), minTime);
+            long timeRight = Math.min(timelineManager.getTimeForX(right), maxTime);
+
+            component.selectTimeInterval(timeLeft, timeRight, top, bottom);
         }
         rectangleGuides.setVisible(false);
-        rectSelStarted = false;
+        rectSelectionStarted = false;
         component.repaint();
-
     }
-
 }
