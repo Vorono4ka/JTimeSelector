@@ -156,27 +156,28 @@ public class TimelineManager {
     }
 
     /**
-     *
-     * @param g Graphics for drawing the layers
+     * @param graphics graphics for drawing the layers
      * @param y y coordinate of the top left corner
-     * @param imageWidth Width of the image on which the graphics g draws.
-     * @param imageHeight Height of the image on which the graphics g draws.
+     * @param imageWidth width of the image on which the graphics draws.
+     * @param imageHeight height of the image on which the graphics draws.
      */
-    public void drawLayers(Graphics2D g, int y, int imageWidth, int imageHeight) {
+    public void drawLayers(Graphics2D graphics, int y, int imageWidth, int imageHeight) {
         currentWidth = imageWidth;
         currentHeight = imageHeight;
-        int x = getRequiredHeaderWidth(g);
+
+        int x = getRequiredHeaderWidth(graphics);
         currentLegendWidth = x + 2 * Layer.PADDING + Layer.POINT_RADIUS;
+
         timelineWidth = currentWidth - currentLegendWidth - Layer.PADDING - Layer.POINT_RADIUS;
         for (Layer layer : layers) {
-            layer.draw(g, this, zoomManager, x, imageWidth, y);
+            layer.draw(graphics, x, imageWidth, y);
             y = y + layer.getHeight();
             if (y > imageHeight) {
                 break;
             }
-            g.setColor(Color.gray);
-            g.setStroke(new BasicStroke(.1f));
-            g.drawLine(x, y, imageWidth - Layer.PADDING, y);
+            graphics.setColor(Color.gray);
+            graphics.setStroke(new BasicStroke(.1f));
+            graphics.drawLine(x, y, imageWidth - Layer.PADDING, y);
         }
         layersBottomY = y;
     }
@@ -220,7 +221,7 @@ public class TimelineManager {
      */
     public void drawTimeSelectionEffects(Graphics2D graphics, int y, long time, int layerIndex) {
         Layer layer = layers.get(layerIndex);
-        layer.drawTimeSelectionEffect(graphics, time, this, zoomManager, y + layer.getHeight() * layerIndex);
+        layer.drawTimeSelectionEffect(graphics, time, y + layer.getHeight() * layerIndex);
     }
 
     /**
@@ -237,7 +238,7 @@ public class TimelineManager {
         int y = JTimeSelector.TOP_PADDING + TimeEntryLayer.HEIGHT * fromLayer;
         for (int i = fromLayer; i <= toLayer; i++) {
             Layer layer = layers.get(i);
-            layer.drawIntervalSelectionEffect(graphics, fromX, toX, this, zoomManager, y);
+            layer.drawIntervalSelectionEffect(graphics, fromX, toX, y);
             y += layer.getHeight();
         }
     }

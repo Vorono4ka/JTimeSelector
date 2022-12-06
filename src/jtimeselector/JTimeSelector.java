@@ -159,7 +159,7 @@ public class JTimeSelector extends JPanel implements TimeSelector {
      */
     @Override
     public void addTimeValuesLayer(String name, long[] timeValues) {
-        timelineManager.addLayer(new TimeEntryLayer(name, timeValues));
+        timelineManager.addLayer(new TimeEntryLayer(timelineManager, zoomManager, name, timeValues));
         zoomManager.updateMinAndMaxTime(timelineManager);
     }
 

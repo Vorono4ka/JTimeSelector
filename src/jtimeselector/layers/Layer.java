@@ -11,9 +11,13 @@ public abstract class Layer {
     public static final int POINT_RADIUS = 3;
     public static final int BRG_RECT_WIDTH = 6;
 
+    protected final TimelineManager timelineManager;
+    protected final ZoomManager zoomManager;
     private final String name;
 
-    public Layer(String name) {
+    public Layer(TimelineManager timelineManager, ZoomManager zoomManager, String name) {
+        this.timelineManager = timelineManager;
+        this.zoomManager = zoomManager;
         this.name = name;
     }
 
@@ -24,19 +28,17 @@ public abstract class Layer {
     /**
      * Draws the layer
      *
-     * @param graphics        Graphics object for drawing
-     * @param timelineManager timeline manager
-     * @param zoomManager     zoom manager
-     * @param headerSize      width of the header column (column with layer names)
-     * @param graphicsWidth   width of the image on which the graphics is drawn.
-     * @param y               y coordinate of the location where the layer should be drawn.
+     * @param graphics      Graphics object for drawing
+     * @param headerSize    width of the header column (column with layer names)
+     * @param graphicsWidth width of the image on which the graphics is drawn.
+     * @param y             y coordinate of the location where the layer should be drawn.
      */
-    abstract void draw(Graphics2D graphics, TimelineManager timelineManager, ZoomManager zoomManager, int headerSize, int graphicsWidth, int y);
+    abstract void draw(Graphics2D graphics, int headerSize, int graphicsWidth, int y);
 
     abstract int getHeight();
     
     abstract long getMaxTimeValue();
     abstract long getMinTimeValue();
-    abstract void drawTimeSelectionEffect(Graphics2D graphics, long time, TimelineManager timelineManager, ZoomManager zoomManager, int y);
-    abstract void drawIntervalSelectionEffect(Graphics2D graphics, long from, long to, TimelineManager timelineManager, ZoomManager zoomManager, int y);
+    abstract void drawTimeSelectionEffect(Graphics2D graphics, long time, int y);
+    abstract void drawIntervalSelectionEffect(Graphics2D graphics, long from, long to, int y);
 }
