@@ -6,7 +6,7 @@ import java.awt.Graphics2D;
 import com.vorono4ka.LongList;
 import com.vorono4ka.interfaces.BinarySearcher;
 import jtimeselector.TimeSelectionManager;
-import jtimeselector.ZoomManager;
+import jtimeselector.VisibleAreaManager;
 
 /**
  * Responsible for drawing a single timeline layer.
@@ -19,12 +19,12 @@ public class TimeEntryLayer extends Layer {
 
     public final LongList timeValues;
 
-    public TimeEntryLayer(TimelineManager timelineManager, ZoomManager zoomManager, String name, long[] array) {
-        this(timelineManager, zoomManager, name, new LongList(array));
+    public TimeEntryLayer(TimelineManager timelineManager, VisibleAreaManager visibleAreaManager, String name, long[] array) {
+        this(timelineManager, visibleAreaManager, name, new LongList(array));
     }
 
-    public TimeEntryLayer(TimelineManager timelineManager, ZoomManager zoomManager, String name, LongList timeValues) {
-        super(timelineManager, zoomManager, name);
+    public TimeEntryLayer(TimelineManager timelineManager, VisibleAreaManager visibleAreaManager, String name, LongList timeValues) {
+        super(timelineManager, visibleAreaManager, name);
 
         this.timeValues = timeValues;
     }
@@ -44,7 +44,7 @@ public class TimeEntryLayer extends Layer {
         final int pointY = y + TimeEntryLayer.HEIGHT / 2 - Layer.POINT_RADIUS;
 
         graphics.setColor(BGR_DEFAULT_COLOR);
-        for (int i = BinarySearcher.firstGreaterThanOrEqual(timeValues.getArray(), this.zoomManager.getCurrentMinTime()); i <= BinarySearcher.lastLessThanOrEqual(timeValues.getArray(), zoomManager.getCurrentMaxTime()); i++) {
+        for (int i = BinarySearcher.firstGreaterThanOrEqual(timeValues.getArray(), this.visibleAreaManager.getCurrentMinTime()); i <= BinarySearcher.lastLessThanOrEqual(timeValues.getArray(), visibleAreaManager.getCurrentMaxTime()); i++) {
             int position = timelineManager.getXForTime(timeValues.get(i));
 
             int pointX = x + position;

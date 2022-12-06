@@ -9,7 +9,7 @@ import jtimeselector.layers.TimelineManager;
 
 public class IntervalSelectionManager {
     private final TimelineManager timelineManager;
-    private final ZoomManager zoomManager;
+    private final VisibleAreaManager visibleAreaManager;
 
     private boolean hasSelection = false;
     private long fromTime;
@@ -20,9 +20,9 @@ public class IntervalSelectionManager {
     private boolean drawRight;
     private boolean drawLeft;
 
-    public IntervalSelectionManager(TimelineManager timelineManager, ZoomManager zoomManager) {
+    public IntervalSelectionManager(TimelineManager timelineManager, VisibleAreaManager visibleAreaManager) {
         this.timelineManager = timelineManager;
-        this.zoomManager = zoomManager;
+        this.visibleAreaManager = visibleAreaManager;
     }
 
     public void clearSelection() {
@@ -83,8 +83,8 @@ public class IntervalSelectionManager {
             return;
         }
 
-        drawLeft = zoomManager.timeValueInCurrentRange(fromTime);
-        drawRight = zoomManager.timeValueInCurrentRange(toTime);
+        drawLeft = visibleAreaManager.timeValueInCurrentRange(fromTime);
+        drawRight = visibleAreaManager.timeValueInCurrentRange(toTime);
         if (!drawLeft && !drawRight) {
             return;
         }
@@ -118,8 +118,7 @@ public class IntervalSelectionManager {
     }
 
     /**
-     * Call after left label is drawn (uses its position)! (providing leftDrawn
-     * == true)
+     * Call after left label is drawn (uses its position)! (providing leftDrawn == true)
      *
      * @param g
      * @param textY

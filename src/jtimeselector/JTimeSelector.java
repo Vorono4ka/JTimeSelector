@@ -31,7 +31,7 @@ public class JTimeSelector extends JPanel implements TimeSelector {
     public static final int TOP_PADDING = 10;
 
     private final TimelineManager timelineManager;
-    private final ZoomManager zoomManager;
+    private final VisibleAreaManager visibleAreaManager;
     private final TimeSelectionManager timeSelection;
     private final List<TimeSelectionListener> listeners = new ArrayList<>();
     private final RectangleSelectionGuides rectangleGuides = new RectangleSelectionGuides();
@@ -61,16 +61,16 @@ public class JTimeSelector extends JPanel implements TimeSelector {
      * @param converter a function converting long time values to string
      */
     public JTimeSelector(TimeToStringConverter converter) {
-        zoomManager = new ZoomManager();
-        timelineManager = new TimelineManager(zoomManager, converter);
-        timeSelection = new TimeSelectionManager(timelineManager, zoomManager);
-        intervalSelection = new IntervalSelectionManager(timelineManager, zoomManager);
+        visibleAreaManager = new VisibleAreaManager();
+        timelineManager = new TimelineManager(visibleAreaManager, converter);
+        timeSelection = new TimeSelectionManager(timelineManager, visibleAreaManager);
+        intervalSelection = new IntervalSelectionManager(timelineManager, visibleAreaManager);
         setFont(getFont().deriveFont(15f));
         addMouseWheelListener(this::mouseWheelMoved);
 
         final MouseInteraction mouseInteraction = new MouseInteraction(
                 timelineManager,
-                zoomManager,
+                visibleAreaManager,
                 this,
                 timeSelection,
                 rectangleGuides,
@@ -119,8 +119,8 @@ public class JTimeSelector extends JPanel implements TimeSelector {
         if (!timelineManager.isEmpty()) {
             timelineManager.drawTimeLabels(
                 graphics2D,
-                    zoomManager.getCurrentMinTime(),
-                zoomManager.getCurrentMaxTime(),
+                visibleAreaManager.getCurrentMinTime(),
+                visibleAreaManager.getCurrentMaxTime(),
                 timeSelection,
                 intervalSelection
             );
@@ -159,8 +159,8 @@ public class JTimeSelector extends JPanel implements TimeSelector {
      */
     @Override
     public void addTimeValuesLayer(String name, long[] timeValues) {
-        timelineManager.addLayer(new TimeEntryLayer(timelineManager, zoomManager, name, timeValues));
-        zoomManager.updateMinAndMaxTime(timelineManager);
+        timelineManager.addLayer(new TimeEntryLayer(timelineManager, visibleAreaManager, name, timeValues));
+        visibleAreaManager.updateMinAndMaxTime(timelineManager);
     }
 
     /**
@@ -169,7 +169,7 @@ public class JTimeSelector extends JPanel implements TimeSelector {
     @Override
     public void removeGraphLayer(String name) {
         timelineManager.removeLayer(name);
-        zoomManager.updateMinAndMaxTime(timelineManager);
+        visibleAreaManager.updateMinAndMaxTime(timelineManager);
         if (!timeSelection.checkBounds()) {
             timeSelectionChanged();
         }
@@ -264,27 +264,30 @@ public class JTimeSelector extends JPanel implements TimeSelector {
         timelineManager.setConverter(converter);
     }
 
-    private void mouseWheelMoved(MouseWheelEvent e) {
-        int modifiersEx = e.getModifiersEx();
+    private void mouseWheelMoved(MouseWheelEvent event) {
+        int modifiersEx = event.getModifiersEx();
+
+        final double preciseWheelRotation = event.getPreciseWheelRotation();
+        // Limit the rotation to compensate the different behaviour of mouse and trackpad
+        final int rotation = MathHelper.clamp((int) Math.round(preciseWheelRotation * 4), -3, 3);
 
         int ctrlDownMask = InputEvent.CTRL_DOWN_MASK;
+        int shiftDownMask = InputEvent.SHIFT_DOWN_MASK;
         if ((modifiersEx & ctrlDownMask) == ctrlDownMask) {
-            final double preciseWheelRotation = e.getPreciseWheelRotation();
-
-            // Limit the rotation to compensate the different behaviour of mouse and trackpad
-            int rotation = MathHelper.clamp((int) Math.round(preciseWheelRotation * 4), -3, 3);
-            long time = timelineManager.getTimeForX(e.getX());
-            final long currentMinTime = zoomManager.getCurrentMinTime();
-            final long currentMaxTime = zoomManager.getCurrentMaxTime();
+            long time = timelineManager.getTimeForX(event.getX());
+            final long currentMinTime = visibleAreaManager.getCurrentMinTime();
+            final long currentMaxTime = visibleAreaManager.getCurrentMaxTime();
             if (time < currentMinTime || time > currentMaxTime) {
                 return;
             }
 
             if (rotation < 0) {
-                zoomManager.zoomIn(-rotation, time);
+                visibleAreaManager.zoomIn(-rotation, time);
             } else {
-                zoomManager.zoomOut(rotation, time);
+                visibleAreaManager.zoomOut(rotation, time);
             }
+        } else if ((modifiersEx & shiftDownMask) == shiftDownMask) {
+            visibleAreaManager.moveVisibleArea(rotation);
         } else {
             return;
         }

@@ -2,9 +2,10 @@ package jtimeselector;
 
 import jtimeselector.layers.TimelineManager;
 
-public class ZoomManager {
-    private static final double RATIO = .8;
-    private static final double RATIO_INVERTED = 1 / RATIO;
+public class VisibleAreaManager {
+    private static final double SCROLL_RATIO = 200;
+    private static final double ZOOM_RATIO = .8;
+    private static final double ZOOM_RATIO_INVERTED = 1 / ZOOM_RATIO;
 
     private long minTime;
     private long maxTime;
@@ -12,7 +13,7 @@ public class ZoomManager {
     private long currentMax;
     private boolean noZoom;
 
-    public ZoomManager() {
+    public VisibleAreaManager() {
         setDefaultZoom();
     }
 
@@ -58,23 +59,25 @@ public class ZoomManager {
     }
 
     private void zoomIn(long center) {
-        currentMin = (long)(center - (center - currentMin) * RATIO);
-        currentMax = (long)(center + (currentMax - center) * RATIO);
+        currentMin = (long)(center - (center - currentMin) * ZOOM_RATIO);
+        currentMax = (long)(center + (currentMax - center) * ZOOM_RATIO);
     }
 
     private void zoomOut(long center) {
-        currentMin = (long)(center - (center - currentMin) * RATIO_INVERTED);
-        currentMax = (long)(center + (currentMax - center) * RATIO_INVERTED);
+        currentMin = (long)(center - (center - currentMin) * ZOOM_RATIO_INVERTED);
+        currentMax = (long)(center + (currentMax - center) * ZOOM_RATIO_INVERTED);
     }
 
     /**
-     * @param timeOffset positive or negative value that will be added to the current interval
+     * @param scrollRotation positive or negative value that will be added to the current interval
      */
-    public void moveVisibleArea(long timeOffset) {
-        if (currentMin + timeOffset < minTime) timeOffset = minTime - currentMin;
-        if (currentMax + timeOffset > maxTime) timeOffset = maxTime - currentMax;
-        currentMin += timeOffset;
-        currentMax += timeOffset;
+    public void moveVisibleArea(long scrollRotation) {
+        scrollRotation *= SCROLL_RATIO;
+
+        if (currentMin + scrollRotation < minTime) scrollRotation = minTime - currentMin;
+        if (currentMax + scrollRotation > maxTime) scrollRotation = maxTime - currentMax;
+        currentMin += scrollRotation;
+        currentMax += scrollRotation;
     }
 
     public boolean timeValueInCurrentRange(long time) {

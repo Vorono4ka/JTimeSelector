@@ -7,13 +7,13 @@ import java.awt.event.MouseEvent;
 
 /**
  * Reacts on the user interaction.
- * Notifies  {@link TimelineManager}, {@link ZoomManager}, {@link RectangleSelectionGuides}
+ * Notifies  {@link TimelineManager}, {@link VisibleAreaManager}, {@link RectangleSelectionGuides}
  * and {@link IntervalSelectionManager} about the changes that were caused
  * by the user clicking / dragging / scrolling with the mouse.
  */
 public class MouseInteraction extends MouseAdapter {
     private final TimelineManager timelineManager;
-    private final ZoomManager zoomManager;
+    private final VisibleAreaManager visibleAreaManager;
     private final JTimeSelector component;
     private final TimeSelectionManager selectionManager;
     private final RectangleSelectionGuides rectangleGuides;
@@ -23,12 +23,12 @@ public class MouseInteraction extends MouseAdapter {
     private int startY;
     private boolean rectSelectionStarted = false;
 
-    public MouseInteraction(TimelineManager timelineManager, ZoomManager zoomManager,
+    public MouseInteraction(TimelineManager timelineManager, VisibleAreaManager visibleAreaManager,
                             JTimeSelector component, TimeSelectionManager selectionManager,
                             RectangleSelectionGuides rectangleGuides,
                             IntervalSelectionManager intervalSelection) {
         this.timelineManager = timelineManager;
-        this.zoomManager = zoomManager;
+        this.visibleAreaManager = visibleAreaManager;
         this.component = component;
         this.selectionManager = selectionManager;
         this.rectangleGuides = rectangleGuides;
@@ -75,7 +75,7 @@ public class MouseInteraction extends MouseAdapter {
             return;
         }
         long time = timelineManager.getTimeDistance(abs);
-        zoomManager.moveVisibleArea(-time * sgn);
+        visibleAreaManager.moveVisibleArea(-time * sgn);
         startX = e.getX();
         startY = e.getY();
         component.requireRepaint();
@@ -155,8 +155,8 @@ public class MouseInteraction extends MouseAdapter {
                 top = y;
                 bottom = startY;
             }
-            final long minTime = zoomManager.getCurrentMinTime();
-            final long maxTime = zoomManager.getCurrentMaxTime();
+            final long minTime = visibleAreaManager.getCurrentMinTime();
+            final long maxTime = visibleAreaManager.getCurrentMaxTime();
 
             long timeLeft = Math.max(timelineManager.getTimeForX(left), minTime);
             long timeRight = Math.min(timelineManager.getTimeForX(right), maxTime);

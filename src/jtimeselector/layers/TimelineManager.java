@@ -11,7 +11,7 @@ import jtimeselector.IntervalSelectionManager;
 import jtimeselector.JTimeSelector;
 import jtimeselector.TimeSelectionManager;
 import jtimeselector.interfaces.TimeToStringConverter;
-import jtimeselector.ZoomManager;
+import jtimeselector.VisibleAreaManager;
 
 /**
  * Keeps a list of all layers, draws them on the {@link JTimeSelector} component.
@@ -20,7 +20,7 @@ public class TimelineManager {
     public static final Color TIME_LABEL_COLOR = Color.black;
     private final List<Layer> layers = new ArrayList<>();
     private int currentLegendWidth;
-    private final ZoomManager zoomManager;
+    private final VisibleAreaManager visibleAreaManager;
     private int currentWidth;
     private int currentHeight;
     private int timelineWidth;
@@ -32,8 +32,8 @@ public class TimelineManager {
         return layersBottomY;
     }
 
-    public TimelineManager(ZoomManager zoomManager, TimeToStringConverter converter) {
-        this.zoomManager = zoomManager;
+    public TimelineManager(VisibleAreaManager visibleAreaManager, TimeToStringConverter converter) {
+        this.visibleAreaManager = visibleAreaManager;
         this.converter = converter;
     }
 
@@ -260,24 +260,24 @@ public class TimelineManager {
     }
 
     public long getTimeForX(int x) {
-        long timeFrom = zoomManager.getCurrentMinTime();
-        long timeTo = zoomManager.getCurrentMaxTime();
+        long timeFrom = visibleAreaManager.getCurrentMinTime();
+        long timeTo = visibleAreaManager.getCurrentMaxTime();
         long timeInterval = timeTo - timeFrom;
         x = x - currentLegendWidth;
         return Math.round(timeFrom + timeInterval * x / (double)timelineWidth);
     }
 
     public long getTimeDistance(int interval) {
-        long timeFrom = zoomManager.getCurrentMinTime();
-        long timeTo = zoomManager.getCurrentMaxTime();
+        long timeFrom = visibleAreaManager.getCurrentMinTime();
+        long timeTo = visibleAreaManager.getCurrentMaxTime();
 
         long timeInterval = timeTo - timeFrom;
         return (timeInterval * interval) / timelineWidth;
     }
 
     public int getXForTime(long time) {
-        long timeFrom = zoomManager.getCurrentMinTime();
-        long timeTo = zoomManager.getCurrentMaxTime();
+        long timeFrom = visibleAreaManager.getCurrentMinTime();
+        long timeTo = visibleAreaManager.getCurrentMaxTime();
         double timelinePercent = ((double)(time - timeFrom)) / (timeTo - timeFrom);
         return (int) Math.round(timelinePercent * timelineWidth);
     }

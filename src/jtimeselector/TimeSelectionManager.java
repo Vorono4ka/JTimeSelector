@@ -11,7 +11,7 @@ public class TimeSelectionManager {
     public static final int SELECTION_THRESHOLD = 150;
 
     private final TimelineManager timelineManager;
-    private final ZoomManager zoomManager;
+    private final VisibleAreaManager visibleAreaManager;
     private long selectedTime;
     private int selectedLayer;
     private boolean hasSelection = false;
@@ -23,21 +23,21 @@ public class TimeSelectionManager {
     private int stringX1;
     private int stringX2;
 
-    public TimeSelectionManager(TimelineManager timelineManager, ZoomManager zoomManager, long selectedTime) {
+    public TimeSelectionManager(TimelineManager timelineManager, VisibleAreaManager visibleAreaManager, long selectedTime) {
         this.timelineManager = timelineManager;
-        this.zoomManager = zoomManager;
+        this.visibleAreaManager = visibleAreaManager;
         this.selectedTime = selectedTime;
     }
 
-    public TimeSelectionManager(TimelineManager timelineManager, ZoomManager zoomManager) {
-        this(timelineManager, zoomManager, 0);
+    public TimeSelectionManager(TimelineManager timelineManager, VisibleAreaManager visibleAreaManager) {
+        this(timelineManager, visibleAreaManager, 0);
     }
 
     public void drawSelectedTime(Graphics2D graphics) {
         if (!hasSelection) {
             return;
         }
-        if (!zoomManager.timeValueInCurrentRange(selectedTime)) {
+        if (!visibleAreaManager.timeValueInCurrentRange(selectedTime)) {
             return;
         }
         int x = timelineManager.getLegendWidth() + timelineManager.getXForTime(selectedTime);

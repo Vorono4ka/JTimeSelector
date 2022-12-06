@@ -1,7 +1,7 @@
 package jtimeselector.layers;
 
 import java.awt.Graphics2D;
-import jtimeselector.ZoomManager;
+import jtimeselector.VisibleAreaManager;
 
 /**
  * Represents a one layer / line on the graphics representation of the component.
@@ -12,12 +12,12 @@ public abstract class Layer {
     public static final int BRG_RECT_WIDTH = 6;
 
     protected final TimelineManager timelineManager;
-    protected final ZoomManager zoomManager;
+    protected final VisibleAreaManager visibleAreaManager;
     private final String name;
 
-    public Layer(TimelineManager timelineManager, ZoomManager zoomManager, String name) {
+    public Layer(TimelineManager timelineManager, VisibleAreaManager visibleAreaManager, String name) {
         this.timelineManager = timelineManager;
-        this.zoomManager = zoomManager;
+        this.visibleAreaManager = visibleAreaManager;
         this.name = name;
     }
 
