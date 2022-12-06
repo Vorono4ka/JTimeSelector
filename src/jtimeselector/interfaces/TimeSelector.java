@@ -27,13 +27,6 @@ public interface TimeSelector {
     void requireRepaint();
 
     /**
-     * Gets currently selected time.
-     *
-     * @return {@code null} if no time is selected.
-     */
-    Long getSelectedTime();
-
-    /**
      * Using this method the selected time can be set from outside.
      *
      * @param time selected time point in the timeline
@@ -50,15 +43,6 @@ public interface TimeSelector {
      * @param bottom y coordinate of the selection bottom
      */
     void selectTimeInterval(long from, long to, int top, int bottom);
-
-
-    /**
-     * Sets the function which is used to convert double time values
-     * to strings that are displayed on the panel.
-     *
-     * @param converter new converter function
-     */
-    void setTimeToStringConverter(TimeToStringConverter converter);
 
     TimeSelectionType getTimeSelectionType();
 

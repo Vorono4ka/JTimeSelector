@@ -1,5 +1,6 @@
 package jtimeselector;
 
+import com.vorono4ka.MathHelper;
 import jtimeselector.layers.TimelineManager;
 
 import java.awt.event.MouseAdapter;
@@ -15,24 +16,18 @@ public class MouseInteraction extends MouseAdapter {
     private final TimelineManager timelineManager;
     private final VisibleAreaManager visibleAreaManager;
     private final JTimeSelector component;
-    private final TimeSelectionManager selectionManager;
     private final RectangleSelectionGuides rectangleGuides;
-    private final IntervalSelectionManager intervalSelection;
 
     private int startX;
     private int startY;
     private boolean rectSelectionStarted = false;
 
     public MouseInteraction(TimelineManager timelineManager, VisibleAreaManager visibleAreaManager,
-                            JTimeSelector component, TimeSelectionManager selectionManager,
-                            RectangleSelectionGuides rectangleGuides,
-                            IntervalSelectionManager intervalSelection) {
+                            JTimeSelector component, RectangleSelectionGuides rectangleGuides) {
         this.timelineManager = timelineManager;
         this.visibleAreaManager = visibleAreaManager;
         this.component = component;
-        this.selectionManager = selectionManager;
         this.rectangleGuides = rectangleGuides;
-        this.intervalSelection = intervalSelection;
     }
 
     @Override
@@ -117,17 +112,18 @@ public class MouseInteraction extends MouseAdapter {
         final int x = e.getX();
         final int y = e.getY();
         if (x > timelineManager.getLegendWidth()) {
-            intervalSelection.clearSelection();
-            selectionManager.clearSelection();
+            timelineManager.clearSelection();
 
             long timeForX = timelineManager.getTimeForX(x);
             int layerIndex = timelineManager.getLayerIndex(y);
 
             if (layerIndex == -1) {
-                component.selectTimeInterval(timeForX, timeForX, JTimeSelector.TOP_PADDING, timelineManager.getLayersBottomY() - 1);
+                component.selectTimeInterval(timeForX, timeForX, TimelineManager.TOP_PADDING, timelineManager.getLayersBottomY() - 1);
             } else {
                 component.selectTime(timeForX, layerIndex);
             }
+
+            component.setCursorPosition(timeForX);
 
             component.repaint();
         }
@@ -157,6 +153,9 @@ public class MouseInteraction extends MouseAdapter {
             }
             final long minTime = visibleAreaManager.getCurrentMinTime();
             final long maxTime = visibleAreaManager.getCurrentMaxTime();
+
+            long clampedCursorPosition = MathHelper.clamp(timelineManager.getTimeForX(x), minTime, maxTime);
+            component.setCursorPosition(clampedCursorPosition);
 
             long timeLeft = Math.max(timelineManager.getTimeForX(left), minTime);
             long timeRight = Math.min(timelineManager.getTimeForX(right), maxTime);

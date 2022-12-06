@@ -7,34 +7,41 @@ import java.awt.Graphics2D;
 import java.util.*;
 
 import com.vorono4ka.interfaces.BinarySearcher;
-import jtimeselector.IntervalSelectionManager;
-import jtimeselector.JTimeSelector;
-import jtimeselector.TimeSelectionManager;
+import jtimeselector.*;
 import jtimeselector.interfaces.TimeToStringConverter;
-import jtimeselector.VisibleAreaManager;
 
 /**
  * Keeps a list of all layers, draws them on the {@link JTimeSelector} component.
  */
 public class TimelineManager {
     public static final Color TIME_LABEL_COLOR = Color.black;
+    public static final int TOP_PADDING = 10;
+
     private final List<Layer> layers = new ArrayList<>();
-    private int currentLegendWidth;
     private final VisibleAreaManager visibleAreaManager;
-    private int currentWidth;
-    private int currentHeight;
+    private final TimeSelectionManager timeSelection;
+    private final IntervalSelectionManager intervalSelection;
+    private final TimeToStringConverter converter;
+
     private int timelineWidth;
+    private int legendWidth;
+    private int width;
+    private int height;
     private int layersBottomY;
-    private TimeToStringConverter converter;
     private int fontHeight;
 
-    public int getLayersBottomY() {
-        return layersBottomY;
-    }
+    // Cursor
+    private boolean drawCursor;
+    private long cursorTime;
+    private int cursorLabelXLeft, cursorLabelXRight;
+
 
     public TimelineManager(VisibleAreaManager visibleAreaManager, TimeToStringConverter converter) {
         this.visibleAreaManager = visibleAreaManager;
         this.converter = converter;
+
+        this.timeSelection = new TimeSelectionManager(this);
+        this.intervalSelection = new IntervalSelectionManager(this);
     }
 
     /**
@@ -45,14 +52,6 @@ public class TimelineManager {
      */
     public void addLayer(Layer layer) {
         layers.add(layer);
-    }
-
-    public void setConverter(TimeToStringConverter converter) {
-        this.converter = converter;
-    }
-
-    public TimeToStringConverter getConverter() {
-        return converter;
     }
 
     /**
@@ -157,18 +156,19 @@ public class TimelineManager {
 
     /**
      * @param graphics graphics for drawing the layers
-     * @param y y coordinate of the top left corner
      * @param imageWidth width of the image on which the graphics draws.
      * @param imageHeight height of the image on which the graphics draws.
      */
-    public void drawLayers(Graphics2D graphics, int y, int imageWidth, int imageHeight) {
-        currentWidth = imageWidth;
-        currentHeight = imageHeight;
+    public void drawLayers(Graphics2D graphics, int imageWidth, int imageHeight) {
+        width = imageWidth;
+        height = imageHeight;
 
         int x = getRequiredHeaderWidth(graphics);
-        currentLegendWidth = x + 2 * Layer.PADDING + Layer.POINT_RADIUS;
+        int y = TimelineManager.TOP_PADDING;
 
-        timelineWidth = currentWidth - currentLegendWidth - Layer.PADDING - Layer.POINT_RADIUS;
+        legendWidth = x + 2 * Layer.PADDING + Layer.POINT_RADIUS;
+
+        timelineWidth = width - legendWidth - Layer.PADDING - Layer.POINT_RADIUS;
         for (Layer layer : layers) {
             layer.draw(graphics, x, imageWidth, y);
             y = y + layer.getHeight();
@@ -185,7 +185,7 @@ public class TimelineManager {
         return layersBottomY+fontHeight;
     }
 
-    public void drawTimeLabels(Graphics2D graphics, long timeFrom, long timeTo, TimeSelectionManager timeSelectionManager, IntervalSelectionManager intervalSelectionManager) {
+    public void drawTimeLabels(Graphics2D graphics, long timeFrom, long timeTo) {
         final int baseline = getTimeLabelsBaselineY();
         graphics.setColor(TIME_LABEL_COLOR);
 
@@ -199,15 +199,15 @@ public class TimelineManager {
 
         int left, right;
 
-        left = currentLegendWidth;
-        right = currentLegendWidth + stringFromWidth;
-        if (!timeSelectionManager.labelCollision(left, right) && !intervalSelectionManager.labelsCollision(left, right)) {
+        left = legendWidth;
+        right = legendWidth + stringFromWidth;
+        if (this.isLabelsCollision(left, right)) {
             graphics.drawString(timeFromString, left, baseline);
         }
 
-        left = currentLegendWidth + timelineWidth - timeToStringWidth;
+        left = legendWidth + timelineWidth - timeToStringWidth;
         right = left + timeToStringWidth;
-        if (!timeSelectionManager.labelCollision(left, right) && !intervalSelectionManager.labelsCollision(left, right)) {
+        if (this.isLabelsCollision(left, right)) {
             graphics.drawString(timeToString, left, baseline);
         }
     }
@@ -215,27 +215,28 @@ public class TimelineManager {
     /**
      * Lets each layer respond to the fact that time is selected.
      * @param graphics Graphics2D object
-     * @param y draw coordinate
-     * @param time
+     * @param time selected time point
      * @param layerIndex index of selected layer
      */
-    public void drawTimeSelectionEffects(Graphics2D graphics, int y, long time, int layerIndex) {
+    public void drawTimeSelectionEffects(Graphics2D graphics, long time, int layerIndex) {
         Layer layer = layers.get(layerIndex);
-        layer.drawTimeSelectionEffect(graphics, time, y + layer.getHeight() * layerIndex);
+        layer.drawTimeSelectionEffect(graphics, time, TimelineManager.TOP_PADDING + layer.getHeight() * layerIndex);
     }
 
     /**
-     * Lets each layer respond to the fact that part of it is selected. 
-     * (For example highlight the selected part.)
+     * Lets each layer respond to the fact that part of it is selected. (For example highlight the selected part.)
      * @param graphics Graphics2D object
-     * @param fromX selection left coordinate
-     * @param toX selection right coordinate
      */
-    public void drawIntervalSelectionEffects(Graphics2D graphics, long fromX, long toX, int fromLayer, int toLayer) {
+    public void drawIntervalSelectionEffects(Graphics2D graphics) {
+        long fromX = intervalSelection.getFromTime();
+        long toX = intervalSelection.getToTime();
+        int fromLayer = intervalSelection.getFromLayer();
+        int toLayer = intervalSelection.getToLayer();
+
         assert fromLayer >= 0 : "fromLayer less than 0";
         assert toLayer < layers.size() : "toLayer more than layers count";
 
-        int y = JTimeSelector.TOP_PADDING + TimeEntryLayer.HEIGHT * fromLayer;
+        int y = TimelineManager.TOP_PADDING + TimeEntryLayer.HEIGHT * fromLayer;
         for (int i = fromLayer; i <= toLayer; i++) {
             Layer layer = layers.get(i);
             layer.drawIntervalSelectionEffect(graphics, fromX, toX, y);
@@ -244,7 +245,6 @@ public class TimelineManager {
     }
 
     /**
-     *
      * @return true if there are no layers to display
      */
     public boolean isEmpty() {
@@ -253,17 +253,21 @@ public class TimelineManager {
 
     public int getLayerIndex(int y) {
         if (hasLayerOnPosition(y)) {
-            return (y - JTimeSelector.TOP_PADDING) / TimeEntryLayer.HEIGHT;
+            return (y - TimelineManager.TOP_PADDING) / TimeEntryLayer.HEIGHT;
         }
 
         return -1;
+    }
+
+    public int getLayersBottomY() {
+        return layersBottomY;
     }
 
     public long getTimeForX(int x) {
         long timeFrom = visibleAreaManager.getCurrentMinTime();
         long timeTo = visibleAreaManager.getCurrentMaxTime();
         long timeInterval = timeTo - timeFrom;
-        x = x - currentLegendWidth;
+        x = x - legendWidth;
         return Math.round(timeFrom + timeInterval * x / (double)timelineWidth);
     }
 
@@ -283,21 +287,21 @@ public class TimelineManager {
     }
 
     public int getLegendWidth() {
-        return currentLegendWidth;
+        return legendWidth;
     }
 
     /**
      * @return width of the whole component
      */
-    public int getCurrentWidth() {
-        return currentWidth;
+    public int getWidth() {
+        return width;
     }
 
     /**
      * @return height of the whole component
      */
-    public int getCurrentHeight() {
-        return currentHeight;
+    public int getHeight() {
+        return height;
     }
 
     public int getFontHeight() {
@@ -309,7 +313,7 @@ public class TimelineManager {
     }
 
     private boolean hasLayerOnPosition(int y) {
-        return y >= JTimeSelector.TOP_PADDING && y < this.getLayersBottomY();
+        return y >= TimelineManager.TOP_PADDING && y < this.getLayersBottomY();
     }
 
     private Layer getLayerByName(String layerName) {
@@ -320,5 +324,103 @@ public class TimelineManager {
         }
 
         return null;
+    }
+
+    public boolean hasSelection() {
+        return this.timeSelection.hasSelection() || this.intervalSelection.hasSelection();
+    }
+
+    public void setSelection(long time, int layerIndex) {
+        timeSelection.selectTime(time, layerIndex);
+        intervalSelection.clearSelection();
+    }
+
+    public void setSelection(long left, long right, int top, int bottom) {
+        intervalSelection.setSelection(left, right, top, bottom);
+        timeSelection.clearSelection();
+    }
+
+    /**
+     * Checks whether the given interval overlaps the interval on which the string representation of selected time has been drawn.
+     *
+     * @param left min value
+     * @param right max value
+     * @return true if intervals overlap
+     */
+    private boolean isLabelsCollision(int left, int right) {
+        return this.hasSelection() && IntervalCheck.collision(cursorLabelXLeft, cursorLabelXRight, left, right);
+    }
+
+    public void drawSelectionEffects(Graphics2D graphics) {
+        if (timeSelection.hasSelection()) {
+            this.drawTimeSelectionEffects(graphics, timeSelection.getSelectedTime(), timeSelection.getSelectedLayer());
+        }
+        if (intervalSelection.hasSelection()) {
+            this.drawIntervalSelectionEffects(graphics);
+        }
+
+        if (drawCursor && visibleAreaManager.timeValueInCurrentRange(cursorTime)) {
+            int cursorX = this.legendWidth + this.getXForTime(cursorTime);
+            drawCursor(graphics, cursorX);
+        }
+    }
+
+    public void clearSelection() {
+        this.intervalSelection.clearSelection();
+        this.timeSelection.clearSelection();
+        this.drawCursor = false;
+    }
+
+    public TimeSelectionType getSelectionType() {
+        if (this.timeSelection.hasSelection()) {
+            return TimeSelectionType.SingleValue;
+        }
+        if (this.intervalSelection.hasSelection()) {
+            return TimeSelectionType.Interval;
+        }
+        return TimeSelectionType.None;
+    }
+
+    /**
+     * Draws cursor from top to bottom of the timeline.
+     *
+     * @param graphics {@link Graphics2D} object
+     * @param x position of cursor
+     */
+    private void drawCursor(Graphics2D graphics, int x) {
+        graphics.setColor(TimeSelectionManager.CURSOR_COLOR);
+
+        @SuppressWarnings("UnnecessaryLocalVariable")
+        final int cursorTop = TimelineManager.TOP_PADDING;
+        final int cursorBottom = this.getTimeLabelsBaselineY();
+
+        graphics.drawLine(x, cursorTop, x, cursorBottom);
+        drawLabelOnRightSide(graphics, x, cursorBottom);
+    }
+
+    /**
+     * Draws label on right side of cursor
+     *
+     * @param graphics {@link Graphics2D} object
+     * @param cursorX x coordinate of the cursor
+     * @param textY y coordinate of drawing text
+     */
+    private void drawLabelOnRightSide(Graphics2D graphics, int cursorX, int textY) {
+        FontMetrics fontMetrics = graphics.getFontMetrics();
+        String string = this.converter.timeToString(this.cursorTime);
+        int width = fontMetrics.stringWidth(string);
+
+        cursorLabelXLeft = cursorX + Layer.PADDING;
+        cursorLabelXRight = cursorLabelXLeft + width;
+        if (cursorLabelXRight > this.width - Layer.PADDING) {
+            cursorLabelXRight = cursorX - Layer.PADDING;
+        }
+
+        graphics.drawString(string, cursorLabelXLeft, textY);
+    }
+
+    public void setCursorPosition(long time) {
+        this.cursorTime = time;
+        this.drawCursor = true;
     }
 }

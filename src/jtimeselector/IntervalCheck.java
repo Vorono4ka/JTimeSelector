@@ -1,8 +1,8 @@
 package jtimeselector;
 
 public class IntervalCheck {
-    public static boolean collision(int a,int b,int x,int y) {
-        return x < b && y > a;
+    public static boolean collision(int left1, int right1, int left2, int right2) {
+        return left2 < right1 && right2 > left1;
     }
 
     /**
